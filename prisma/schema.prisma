@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ThemePreference {
+  SYSTEM
+  DARK
+  LIGHT
+}
+
+enum GridPreset {
+  GRID_1
+  GRID_2X1
+  GRID_2X2
+  GRID_3X3
+  GRID_4X4
+  CUSTOM
+}
+
+enum CombinationVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+model User {
+  id                 String             @id @default(cuid())
+  name               String
+  email              String             @unique
+  emailVerified      Boolean            @default(false)
+  image              String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  sessions           Session[]
+  accounts           Account[]
+  preferences        UserPreference?
+  savedCombinations  SavedCombination[]
+  favoriteChannels   FavoriteChannel[]
+  recentCombinations RecentCombination[]
+  channelAnalytics   ChannelAnalytics[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@unique([providerId, accountId])
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model UserPreference {
+  id                       String          @id @default(cuid())
+  userId                   String          @unique
+  theme                    ThemePreference @default(SYSTEM)
+  notificationsEnabled     Boolean         @default(true)
+  tickerEnabled            Boolean         @default(true)
+  keyboardShortcutsEnabled Boolean         @default(true)
+  reducedMotion            Boolean         @default(false)
+  defaultGridPreset        GridPreset      @default(GRID_2X2)
+  defaultLayoutJson        Json?
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  user                     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preference")
+}
+
+model SavedCombination {
+  id            String                @id @default(cuid())
+  publicSlug    String                @unique @default(cuid())
+  ownerId       String
+  owner         User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  layoutJson    Json
+  visibility    CombinationVisibility @default(PRIVATE)
+  favoritesCount Int                  @default(0)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  recentUses    RecentCombination[]
+
+  @@index([ownerId, updatedAt])
+  @@index([visibility, favoritesCount])
+  @@map("saved_combination")
+}
+
+model FavoriteChannel {
+  id        String   @id @default(cuid())
+  userId    String
+  channelId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channelId])
+  @@index([userId])
+  @@map("favorite_channel")
+}
+
+model RecentCombination {
+  id            String           @id @default(cuid())
+  userId        String
+  combinationId String
+  createdAt     DateTime         @default(now())
+  lastViewedAt  DateTime         @updatedAt
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  combination   SavedCombination @relation(fields: [combinationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, combinationId])
+  @@index([userId, lastViewedAt])
+  @@map("recent_combination")
+}
+
+model ChannelAnalytics {
+  id             String    @id @default(cuid())
+  userId         String
+  channelId      String
+  sessionsCount  Int       @default(0)
+  secondsWatched Int       @default(0)
+  lastWatchedAt  DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channelId])
+  @@index([userId, sessionsCount])
+  @@map("channel_analytics")
+}
