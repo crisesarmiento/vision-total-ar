@@ -34,6 +34,15 @@ function makePlayers(maxPlayers: number) {
   }));
 }
 
+function makePlayer(slot: number) {
+  return {
+    slotId: `slot-${slot}`,
+    channelId: DEFAULT_CHANNEL_IDS[(slot - 1) % DEFAULT_CHANNEL_IDS.length],
+    muted: true,
+    volume: slot === 1 ? 35 : 0,
+  };
+}
+
 function move<T>(items: T[], fromIndex: number, toIndex: number) {
   const nextItems = [...items];
   const [item] = nextItems.splice(fromIndex, 1);
@@ -47,16 +56,23 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   globalMuted: true,
   focusedPlayerId: null,
   setPreset: (preset) =>
-    set(() => {
+    set((state) => {
       const config = GRID_PRESETS.find((item) => item.id === preset) ?? GRID_PRESETS[2];
-      const seededPlayers = makePlayers(config.maxPlayers);
+      const preservedPlayers = state.players.slice(0, config.maxPlayers);
+      const usedSlotIds = new Set(preservedPlayers.map((player) => player.slotId));
+      const remainingSlots = config.maxPlayers - preservedPlayers.length;
+      const seededPlayers =
+        remainingSlots > 0
+          ? Array.from({ length: config.maxPlayers }, (_, index) => index + 1)
+              .map((slot) => `slot-${slot}`)
+              .filter((slotId) => !usedSlotIds.has(slotId))
+              .slice(0, remainingSlots)
+              .map((slotId) => makePlayer(Number(slotId.replace("slot-", ""))))
+          : [];
 
       return {
         layoutPreset: preset,
-        players:
-          preset === "custom"
-            ? seededPlayers
-            : seededPlayers.slice(0, Math.min(12, config.maxPlayers)),
+        players: [...preservedPlayers, ...seededPlayers],
       };
     }),
   reorderPlayers: (activeId, overId) =>
