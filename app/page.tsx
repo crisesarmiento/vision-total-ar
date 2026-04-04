@@ -6,8 +6,21 @@ import { getLiveSnapshots } from "@/lib/youtube";
 
 export const dynamic = "force-dynamic";
 
+type FeaturedCombination = {
+  id: string;
+  publicSlug: string;
+  name: string;
+  description: string | null;
+  favoritesCount: number;
+};
+
 export default async function Home() {
-  const [session, featuredCombinations, liveSnapshots, tickerItems] = await Promise.all([
+  const [session, featuredCombinations, liveSnapshots, tickerItems]: [
+    Awaited<ReturnType<typeof getSession>>,
+    FeaturedCombination[],
+    Awaited<ReturnType<typeof getLiveSnapshots>>,
+    Awaited<ReturnType<typeof getTickerItems>>,
+  ] = await Promise.all([
     getSession(),
     prisma.savedCombination.findMany({
       where: {
@@ -27,7 +40,7 @@ export default async function Home() {
     getTickerItems(),
   ]);
 
-  const favoriteChannels = session
+  const favoriteChannels: Array<{ channelId: string }> = session
     ? await prisma.favoriteChannel.findMany({
         where: {
           userId: session.user.id,

@@ -8,9 +8,29 @@ import { requireSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
+type SavedCombinationRecord = {
+  id: string;
+  publicSlug: string;
+  name: string;
+  description: string | null;
+  visibility: "PUBLIC" | "PRIVATE";
+};
+
+type RecentCombinationWithRelation = {
+  id: string;
+  lastViewedAt: Date;
+  combination: {
+    publicSlug: string;
+    name: string;
+  };
+};
+
 export default async function MyCombinationsPage() {
   const session = await requireSession();
-  const [savedCombinations, recentCombinations] = await Promise.all([
+  const [savedCombinations, recentCombinations]: [
+    SavedCombinationRecord[],
+    RecentCombinationWithRelation[],
+  ] = await Promise.all([
     prisma.savedCombination.findMany({
       where: {
         ownerId: session.user.id,

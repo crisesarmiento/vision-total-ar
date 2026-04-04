@@ -7,9 +7,15 @@ import { requireSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
+type ChannelAnalyticsRecord = {
+  channelId: string;
+  sessionsCount: number;
+  secondsWatched: number;
+};
+
 export default async function ProfilePage() {
   const session = await requireSession();
-  const analytics = await prisma.channelAnalytics.findMany({
+  const analytics: ChannelAnalyticsRecord[] = await prisma.channelAnalytics.findMany({
     where: {
       userId: session.user.id,
     },
