@@ -1,4 +1,4 @@
-import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 
 declare global {
@@ -6,15 +6,17 @@ declare global {
 }
 
 const connectionString =
-  process.env.PRISMA_DIRECT_TCP_URL ?? process.env.DATABASE_URL;
+  process.env.DATABASE_URL ?? process.env.PRISMA_DIRECT_TCP_URL;
 
 if (!connectionString) {
   throw new Error(
-    "Configurá PRISMA_DIRECT_TCP_URL o DATABASE_URL para inicializar Prisma.",
+    "Configurá DATABASE_URL para inicializar Prisma.",
   );
 }
 
-const adapter = new PrismaPostgresAdapter({
+process.env.DATABASE_URL = connectionString;
+
+const adapter = new PrismaNeon({
   connectionString,
 });
 
