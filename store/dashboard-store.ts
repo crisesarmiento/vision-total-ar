@@ -22,6 +22,8 @@ type DashboardState = {
   focusPlayer: (slotId: string | null) => void;
 };
 
+const ELECTION_CHANNEL_IDS = ["tn", "c5n", "lnmas", "a24", "canal26", "cronica"] as const;
+
 function makePlayers(maxPlayers: number) {
   return Array.from({ length: maxPlayers }, (_, index) => ({
     slotId: `slot-${index + 1}`,
@@ -38,6 +40,15 @@ function makePlayer(slot: number) {
     muted: true,
     volume: slot === 1 ? 35 : 0,
   };
+}
+
+function makePlayersFromChannels(channelIds: readonly string[]) {
+  return channelIds.map((channelId, index) => ({
+    slotId: `slot-${index + 1}`,
+    channelId,
+    muted: true,
+    volume: index === 0 ? 35 : 0,
+  }));
 }
 
 function fillPlayersToCapacity(players: PlayerTile[], maxPlayers: number) {
@@ -71,7 +82,10 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   setPreset: (preset) =>
     set((state) => {
       const config = GRID_PRESETS.find((item) => item.id === preset) ?? GRID_PRESETS[2];
-      const players = fillPlayersToCapacity(state.players, config.maxPlayers);
+      const players =
+        preset === "elecciones"
+          ? makePlayersFromChannels(ELECTION_CHANNEL_IDS)
+          : fillPlayersToCapacity(state.players, config.maxPlayers);
 
       return {
         layoutPreset: preset,

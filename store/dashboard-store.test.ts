@@ -152,4 +152,44 @@ describe("dashboard store setPreset", () => {
       { slotId: "slot-9", channelId: "tn", muted: true, volume: 0 },
     ]);
   });
+
+  it("reseeds election mode with the six default news channels", () => {
+    useDashboardStore.setState({
+      layoutPreset: "2x2",
+      players: [
+        makePlayer(1, "cronica"),
+        makePlayer(2, "a24"),
+        makePlayer(3, "tn"),
+        makePlayer(4, "c5n"),
+      ],
+    });
+
+    useDashboardStore.getState().setPreset("elecciones");
+
+    expect(useDashboardStore.getState().players).toEqual([
+      { slotId: "slot-1", channelId: "tn", muted: true, volume: 35 },
+      { slotId: "slot-2", channelId: "c5n", muted: true, volume: 0 },
+      { slotId: "slot-3", channelId: "lnmas", muted: true, volume: 0 },
+      { slotId: "slot-4", channelId: "a24", muted: true, volume: 0 },
+      { slotId: "slot-5", channelId: "canal26", muted: true, volume: 0 },
+      { slotId: "slot-6", channelId: "cronica", muted: true, volume: 0 },
+    ]);
+  });
+
+  it("reseeds election mode when switching away and back", () => {
+    useDashboardStore.getState().setPreset("elecciones");
+    useDashboardStore.getState().setChannel("slot-1", "ip");
+    useDashboardStore.getState().setPreset("2x2");
+
+    useDashboardStore.getState().setPreset("elecciones");
+
+    expect(useDashboardStore.getState().players.map((player) => player.channelId)).toEqual([
+      "tn",
+      "c5n",
+      "lnmas",
+      "a24",
+      "canal26",
+      "cronica",
+    ]);
+  });
 });

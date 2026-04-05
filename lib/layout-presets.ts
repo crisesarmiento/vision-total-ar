@@ -2,6 +2,7 @@ export type LayoutPresetId =
   | "1x1"
   | "2x1"
   | "2x2"
+  | "elecciones"
   | "3x3"
   | "4x4"
   | "custom";
@@ -49,6 +50,14 @@ export const GRID_PRESETS: GridPreset[] = [
     maxPlayers: 4,
   },
   {
+    id: "elecciones",
+    name: "Elecciones",
+    description: "Cobertura electoral con seis señales principales.",
+    columns: 3,
+    rows: 2,
+    maxPlayers: 6,
+  },
+  {
     id: "3x3",
     name: "3 x 3",
     description: "Cobertura intensiva de nueve señales.",
@@ -70,6 +79,7 @@ const STORED_GRID_PRESET_BY_LAYOUT: Record<LayoutPresetId, StoredGridPreset> = {
   "1x1": "GRID_1",
   "2x1": "GRID_2X1",
   "2x2": "GRID_2X2",
+  elecciones: "CUSTOM",
   "3x3": "GRID_3X3",
   "4x4": "GRID_4X4",
   custom: "CUSTOM",
