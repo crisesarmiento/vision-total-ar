@@ -362,6 +362,7 @@ export function LiveDashboard({
                 <div className="max-h-[420px] space-y-2 overflow-auto pr-1">
                   {filteredChannels.map((channel) => {
                     const isFavorite = favoriteIds.includes(channel.id);
+                    const isLive = liveSnapshots[channel.id]?.isLive;
 
                     return (
                       <div
@@ -375,6 +376,12 @@ export function LiveDashboard({
                         >
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{channel.shortName}</span>
+                            {isLive ? (
+                              <span
+                                aria-hidden="true"
+                                className="h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]"
+                              />
+                            ) : null}
                             {channel.isIndependent ? (
                               <Badge variant="secondary">Independiente</Badge>
                             ) : null}
