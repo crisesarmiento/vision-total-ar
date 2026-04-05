@@ -11,7 +11,7 @@
 - Las features van contra `develop`.
 - Las releases van desde `develop` hacia `main`.
 - Incluir el ID de Linear en el nombre de la rama y en la PR.
-- Esperar que pasen `lint`, `typecheck`, `test` y `build`.
+- Esperar que pasen `lint`, `typecheck`, `test`, `build`, `Dependency Review` y `CodeQL`.
 - Si la PR prepara una release, incluir el bump de versión en `package.json` y `package-lock.json`.
 
 ## Issues
