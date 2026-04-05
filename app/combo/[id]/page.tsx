@@ -77,8 +77,11 @@ export default async function PublicCombinationPage({
           ) : (
             <Badge variant="secondary">{compactNumber(combination.favoritesCount)} favs</Badge>
           )}
-          <Link className="rounded-full border border-white/10 px-4 py-2 text-sm" href="/">
-            Ir al dashboard
+          <Link
+            className="rounded-full border border-white/10 px-4 py-2 text-sm"
+            href={`/?combo=${combination.publicSlug}`}
+          >
+            Abrir en dashboard
           </Link>
         </div>
       </div>
