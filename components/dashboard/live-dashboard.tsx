@@ -89,7 +89,9 @@ export function LiveDashboard({
   const [isPending, startTransition] = useTransition();
   const hasAppliedInitialLayout = useRef(false);
   const lastSavedLayout = useRef<string | null>(null);
-  const pendingSavedLayout = useRef<string | null>(null);
+  const queuedLayout = useRef<DashboardLayout | null>(null);
+  const queuedLayoutKey = useRef<string | null>(null);
+  const isSavingLayout = useRef(false);
   const {
     focusedPlayerId,
     focusPlayer,
@@ -228,47 +230,51 @@ export function LiveDashboard({
       return;
     }
 
-    if (
-      serializedLayout === lastSavedLayout.current
-      || serializedLayout === pendingSavedLayout.current
-    ) {
+    if (serializedLayout === lastSavedLayout.current || serializedLayout === queuedLayoutKey.current) {
       return;
     }
 
     const timeoutId = window.setTimeout(() => {
-      pendingSavedLayout.current = serializedLayout;
+      queuedLayout.current = layoutPayload;
+      queuedLayoutKey.current = serializedLayout;
 
-      const retrySave = async () => {
+      const processSaveQueue = async () => {
+        if (isSavingLayout.current) {
+          return;
+        }
+
+        isSavingLayout.current = true;
+
         try {
-          await persistLayoutPreference(layoutPayload.preset, layoutPayload);
+          while (queuedLayout.current && queuedLayoutKey.current !== lastSavedLayout.current) {
+            const nextLayout = queuedLayout.current;
+            const nextLayoutKey = queuedLayoutKey.current;
 
-          if (pendingSavedLayout.current !== serializedLayout) {
-            return;
+            try {
+              await persistLayoutPreference(nextLayout.preset, nextLayout);
+              lastSavedLayout.current = nextLayoutKey;
+
+              if (queuedLayoutKey.current === nextLayoutKey) {
+                queuedLayout.current = null;
+                queuedLayoutKey.current = null;
+              }
+            } catch {
+              await new Promise((resolve) => window.setTimeout(resolve, 5_000));
+            }
           }
+        } finally {
+          isSavingLayout.current = false;
 
-          lastSavedLayout.current = serializedLayout;
-          pendingSavedLayout.current = null;
-        } catch {
-          if (pendingSavedLayout.current !== serializedLayout) {
-            return;
+          if (queuedLayout.current && queuedLayoutKey.current !== lastSavedLayout.current) {
+            void processSaveQueue();
           }
-
-          window.setTimeout(() => {
-            void retrySave();
-          }, 5_000);
         }
       };
 
-      void retrySave();
+      void processSaveQueue();
     }, 1_500);
 
-    return () => {
-      window.clearTimeout(timeoutId);
-
-      if (pendingSavedLayout.current === serializedLayout) {
-        pendingSavedLayout.current = null;
-      }
-    };
+    return () => window.clearTimeout(timeoutId);
   }, [layoutPayload, user]);
 
   const onDragEnd = (event: DragEndEvent) => {
