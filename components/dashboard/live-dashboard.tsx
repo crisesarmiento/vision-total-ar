@@ -68,6 +68,7 @@ type LiveDashboardProps = {
   initialTickerItems: TickerItem[];
   initialPreset: LayoutPresetId;
   initialLayout: DashboardLayout | null;
+  comboLayout?: DashboardLayout | null;
 };
 
 export function LiveDashboard({
@@ -78,6 +79,7 @@ export function LiveDashboard({
   initialTickerItems,
   initialPreset,
   initialLayout,
+  comboLayout,
 }: LiveDashboardProps) {
   const sensors = useSensors(useSensor(PointerSensor));
   const [syncPlaybackSignal, setSyncPlaybackSignal] = useState<"play" | "pause" | null>(
@@ -165,7 +167,14 @@ export function LiveDashboard({
       return;
     }
 
-    if (initialLayout) {
+    if (comboLayout) {
+      setPreset(comboLayout.preset);
+      comboLayout.players.forEach((player) => {
+        if (getChannelById(player.channelId)) {
+          setChannel(player.slotId, player.channelId);
+        }
+      });
+    } else if (initialLayout) {
       hydrateLayout(initialLayout);
       lastSavedLayout.current = JSON.stringify(initialLayout);
     } else {
@@ -175,7 +184,7 @@ export function LiveDashboard({
     }
 
     hasAppliedInitialLayout.current = true;
-  }, [hydrateLayout, initialLayout, initialPreset, layoutPreset, setPreset]);
+  }, [comboLayout, hydrateLayout, initialLayout, initialPreset, layoutPreset, setChannel, setPreset]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

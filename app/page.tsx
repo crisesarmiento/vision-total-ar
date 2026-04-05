@@ -16,19 +16,20 @@ type FeaturedCombination = {
   favoritesCount: number;
 };
 
-export default async function Home() {
-  const session = await getSession();
-
-  const [featuredCombinations, liveSnapshots, tickerItems, favoriteChannels, userPreference]: [
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ combo?: string }>;
+}) {
+  const [{ combo }, session, featuredCombinations, liveSnapshots, tickerItems]: [
+    Awaited<typeof searchParams>,
+    Awaited<ReturnType<typeof getSession>>,
     FeaturedCombination[],
     Awaited<ReturnType<typeof getLiveSnapshots>>,
     Awaited<ReturnType<typeof getTickerItems>>,
-    Array<{ channelId: string }>,
-    {
-      defaultGridPreset: StoredGridPreset;
-      defaultLayoutJson: unknown;
-    } | null,
   ] = await Promise.all([
+    searchParams,
+    getSession(),
     prisma.savedCombination.findMany({
       where: {
         visibility: "PUBLIC",
@@ -45,6 +46,16 @@ export default async function Home() {
     }),
     getLiveSnapshots(),
     getTickerItems(),
+  ]);
+
+  const [favoriteChannels, userPreference, selectedCombination]: [
+    Array<{ channelId: string }>,
+    {
+      defaultGridPreset: StoredGridPreset;
+      defaultLayoutJson: unknown;
+    } | null,
+    { layoutJson: unknown } | null,
+  ] = await Promise.all([
     session
       ? prisma.favoriteChannel.findMany({
           where: {
@@ -66,9 +77,21 @@ export default async function Home() {
           },
         })
       : Promise.resolve(null),
+    combo
+      ? prisma.savedCombination.findFirst({
+          where: {
+            publicSlug: combo,
+            visibility: "PUBLIC",
+          },
+          select: {
+            layoutJson: true,
+          },
+        })
+      : Promise.resolve(null),
   ]);
 
   const initialLayout = parseDashboardLayout(userPreference?.defaultLayoutJson ?? null);
+  const comboLayout = parseDashboardLayout(selectedCombination?.layoutJson ?? null);
 
   const user = session
     ? {
@@ -87,6 +110,7 @@ export default async function Home() {
       initialTickerItems={tickerItems}
       initialPreset={fromStoredGridPreset(userPreference?.defaultGridPreset)}
       initialLayout={initialLayout}
+      comboLayout={comboLayout}
     />
   );
 }
