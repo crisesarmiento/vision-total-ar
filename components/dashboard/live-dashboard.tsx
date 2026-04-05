@@ -132,10 +132,21 @@ export function LiveDashboard({
 
   const filteredChannels = useMemo(() => {
     const normalizedSearch = search.toLowerCase();
-    return channels.filter((channel) =>
-      `${channel.name} ${channel.description}`.toLowerCase().includes(normalizedSearch),
-    );
-  }, [search]);
+    return channels
+      .filter((channel) =>
+        `${channel.name} ${channel.description}`.toLowerCase().includes(normalizedSearch),
+      )
+      .sort((left, right) => {
+        const leftFavorite = favoriteIds.includes(left.id);
+        const rightFavorite = favoriteIds.includes(right.id);
+
+        if (leftFavorite === rightFavorite) {
+          return 0;
+        }
+
+        return leftFavorite ? -1 : 1;
+      });
+  }, [favoriteIds, search]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
