@@ -163,10 +163,29 @@ Config recomendada:
 ## GitHub + Linear
 Config recomendada:
 - Activar integración GitHub en Linear
+- Configurar GitHub Issues Sync entre el repo y el team correcto de Linear
 - Usar branch names con issue ID
 - Incluir issue ID en PR title o description
 - Activar automatización de estados desde PRs
 - Mantener el preview URL de Vercel en la PR
+
+### Mirror de GitHub Project
+- Workflow repo-side: `.github/workflows/project-mirror.yml`
+- Script: `.github/scripts/sync-project-status.mjs`
+- Secretos requeridos:
+  - `GH_PROJECT_TOKEN`: token con permisos para actualizar el GitHub Project y leer el repo
+  - `LINEAR_API_KEY`: opcional pero recomendado para reflejar el estado real de Linear cuando exista un `CRIS-###` en issue, PR o branch
+- El workflow:
+  - agrega issues y PRs al GitHub Project `Vision Total AR - Project`
+  - refleja `Todo`, `In Progress`, `In Review` y `Done`
+  - usa estado de Linear cuando puede resolver el issue ID
+  - si no puede, cae a una heurística segura basada en el estado del issue/PR en GitHub
+
+### Estrategia de milestones
+- Los milestones de GitHub representan releases, no ciclos de Linear.
+- Convención recomendada: `v0.1.0`, `v0.2.0`, etc.
+- Crear el milestone cuando se abre un release batch real desde `develop`.
+- No usar milestones para trabajo diario ni para reemplazar cycles de Linear.
 
 ## Branch protections
 Aplicar manualmente en GitHub:
@@ -183,6 +202,7 @@ Checks obligatorios:
 - `Typecheck`
 - `Test`
 - `Build`
+- `Project Mirror` si el repo decide volverlo obligatorio
 
 ## Estado de verificación
 Validado localmente:
