@@ -12,6 +12,7 @@
 - Las releases van desde `develop` hacia `main`.
 - Incluir el ID de Linear en el nombre de la rama y en la PR.
 - Esperar que pasen `lint`, `typecheck`, `test` y `build`.
+- Si la PR prepara una release, incluir el bump de versión en `package.json` y `package-lock.json`.
 
 ## Issues
 - Bugs y feature requests abiertos por la comunidad entran por GitHub Issues.
@@ -33,3 +34,14 @@
 - El GitHub Project refleja ejecución y review en GitHub; Linear sigue siendo la fuente de verdad para planificación.
 - Los milestones de GitHub se reservan para releases y deben usar nombres versionados, por ejemplo `v0.1.0`.
 - Los cycles siguen viviendo en Linear y no deben mapearse 1:1 a milestones de GitHub.
+
+## Versionado y releases
+- `package.json` es la fuente de verdad de la versión.
+- Usar:
+  - `npm run version:patch`
+  - `npm run version:minor`
+  - `npm run version:major`
+- Los workflows usan `github.token`; no necesitan un PAT adicional para tags y releases.
+- Cuando una PR con bump de versión se mergea a `develop`, el workflow `Prerelease` publica `vX.Y.Z-rc.N`.
+- Cuando esa versión llega a `main`, el workflow `Release` publica `vX.Y.Z`.
+- No hacer tags manuales para releases normales salvo que haya una excepción operacional.

@@ -88,6 +88,9 @@ npm run lint
 npm run typecheck
 npm run test
 npm run build
+npm run version:patch
+npm run version:minor
+npm run version:major
 npm run prisma:generate
 npm run prisma:migrate
 npm run db:push
@@ -134,9 +137,12 @@ Archivo: `.github/workflows/ci.yml`
 2. Crear rama desde `develop` con el issue ID.
 3. Abrir PR contra `develop`.
 4. Esperar preview de Vercel + CI verde.
-5. Mergear a `develop`.
-6. Abrir release PR de `develop` hacia `main`.
-7. Deploy de producción desde `main`.
+5. Si la PR prepara una release, subir la versión con `npm run version:patch`, `npm run version:minor` o `npm run version:major`.
+6. Mergear a `develop`.
+7. Si la versión cambió, GitHub crea una prerelease `vX.Y.Z-rc.N`.
+8. Abrir release PR de `develop` hacia `main`.
+9. Al mergear a `main`, GitHub crea la release estable `vX.Y.Z`.
+10. Deploy de producción desde `main`.
 
 ## Linear
 Proyecto creado:
@@ -186,6 +192,18 @@ Config recomendada:
 - Convención recomendada: `v0.1.0`, `v0.2.0`, etc.
 - Crear el milestone cuando se abre un release batch real desde `develop`.
 - No usar milestones para trabajo diario ni para reemplazar cycles de Linear.
+
+## Versionado y releases
+- Fuente de verdad: `package.json`.
+- Workflow de prerelease: `.github/workflows/release-prerelease.yml`
+- Workflow de release estable: `.github/workflows/release-stable.yml`
+- Configuración de notas automáticas: `.github/release.yml`
+- No requiere secrets extra: usa el `github.token` del workflow para crear tags y releases.
+- Convención:
+  - merge con cambio de versión a `develop` -> prerelease `vX.Y.Z-rc.N`
+  - merge de esa misma versión a `main` -> release estable `vX.Y.Z`
+- Si un merge a `develop` no cambia la versión, no se crea prerelease.
+- Si `main` ya tiene el tag `vX.Y.Z`, el workflow no duplica la release.
 
 ## Branch protections
 Aplicar manualmente en GitHub:

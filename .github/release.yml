@@ -1,0 +1,33 @@
+changelog:
+  exclude:
+    labels:
+      - skip-release-notes
+  categories:
+    - title: Features
+      labels:
+        - enhancement
+        - feature
+        - type/feature
+    - title: Fixes
+      labels:
+        - bug
+        - fix
+        - type/bug
+    - title: Security
+      labels:
+        - security
+    - title: Dependencies
+      labels:
+        - dependencies
+    - title: Documentation
+      labels:
+        - documentation
+        - docs
+        - type/docs
+    - title: Maintenance
+      labels:
+        - chore
+        - devops
+        - ci
+        - area/automation
+        - type/chore
