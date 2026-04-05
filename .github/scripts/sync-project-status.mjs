@@ -15,9 +15,10 @@ main().catch((error) => {
 });
 
 async function main() {
-  const ghToken = process.env.GH_PROJECT_TOKEN || process.env.GITHUB_TOKEN;
+  const projectWriteToken = process.env.GH_PROJECT_TOKEN;
+  const githubReadToken = process.env.GITHUB_TOKEN || projectWriteToken;
 
-  if (!ghToken) {
+  if (!projectWriteToken) {
     console.log("Skipping project sync because GH_PROJECT_TOKEN is not configured.");
     return;
   }
@@ -30,14 +31,18 @@ async function main() {
 
   const [repoOwner, repoName] = repository.split("/");
   const projectMeta = await getProjectMeta({
-    token: ghToken,
+    token: projectWriteToken,
     owner: process.env.PROJECT_OWNER || repoOwner,
     ownerType: process.env.PROJECT_OWNER_TYPE || "user",
     projectNumber: Number(process.env.PROJECT_NUMBER || "0"),
     statusFieldName: process.env.PROJECT_STATUS_FIELD || "Status",
   });
 
-  const workItems = await getWorkItems({ repoOwner, repoName });
+  const workItems = await getWorkItems({
+    repoOwner,
+    repoName,
+    token: githubReadToken,
+  });
 
   if (workItems.length === 0) {
     console.log("No project items to sync for this event.");
@@ -46,7 +51,7 @@ async function main() {
 
   for (const item of workItems) {
     const projectItemId = await ensureProjectItem({
-      token: ghToken,
+      token: projectWriteToken,
       projectId: projectMeta.id,
       contentId: item.nodeId,
     });
@@ -69,7 +74,7 @@ async function main() {
     }
 
     await updateProjectStatus({
-      token: ghToken,
+      token: projectWriteToken,
       projectId: projectMeta.id,
       itemId: projectItemId,
       fieldId: projectMeta.statusFieldId,
@@ -82,7 +87,7 @@ async function main() {
   }
 }
 
-async function getWorkItems({ repoOwner, repoName }) {
+async function getWorkItems({ repoOwner, repoName, token }) {
   const eventName = process.env.GITHUB_EVENT_NAME;
   const event = await readGitHubEvent();
 
@@ -95,13 +100,13 @@ async function getWorkItems({ repoOwner, repoName }) {
   }
 
   const [issues, pullRequests] = await Promise.all([
-    githubRest(
+    githubRestPaginated(
       `/repos/${repoOwner}/${repoName}/issues?state=open&per_page=100`,
-      process.env.GH_PROJECT_TOKEN || process.env.GITHUB_TOKEN,
+      token,
     ),
-    githubRest(
+    githubRestPaginated(
       `/repos/${repoOwner}/${repoName}/pulls?state=open&per_page=100`,
-      process.env.GH_PROJECT_TOKEN || process.env.GITHUB_TOKEN,
+      token,
     ),
   ]);
 
@@ -456,4 +461,27 @@ async function githubRest(path, token) {
   }
 
   return payload;
+}
+
+async function githubRestPaginated(path, token) {
+  const items = [];
+  let page = 1;
+
+  while (true) {
+    const url = new URL(path, "https://api.github.com");
+    url.searchParams.set("page", String(page));
+
+    const payload = await githubRest(
+      `${url.pathname}${url.search}`,
+      token,
+    );
+
+    items.push(...payload);
+
+    if (payload.length < 100) {
+      return items;
+    }
+
+    page += 1;
+  }
 }
