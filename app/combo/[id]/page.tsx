@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CopyLinkButton } from "@/components/combo/copy-link-button";
+import { FavoriteCombinationButton } from "@/components/combo/favorite-combination-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getChannelById } from "@/lib/channels";
 import { getPresetById, type LayoutPresetId } from "@/lib/layout-presets";
 import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/session";
+import { compactNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +26,7 @@ export default async function PublicCombinationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const session = await getSession();
   const combination = await prisma.savedCombination.findUnique({
     where: {
       publicSlug: id,
@@ -34,6 +39,17 @@ export default async function PublicCombinationPage({
   if (!combination || combination.visibility !== "PUBLIC") {
     notFound();
   }
+
+  const favoriteRecord = session
+    ? await prisma.favoritedCombination.findUnique({
+        where: {
+          userId_combinationId: {
+            userId: session.user.id,
+            combinationId: combination.id,
+          },
+        },
+      })
+    : null;
 
   const layout = combination.layoutJson as ComboLayout;
   const preset = getPresetById(layout.preset ?? "2x2");
@@ -53,8 +69,21 @@ export default async function PublicCombinationPage({
         </div>
         <div className="flex gap-2">
           <Badge variant="secondary">{players.length} señales</Badge>
-          <Link className="rounded-full border border-white/10 px-4 py-2 text-sm" href="/">
-            Ir al dashboard
+          {session ? (
+            <FavoriteCombinationButton
+              combinationId={combination.id}
+              initialFavorited={Boolean(favoriteRecord)}
+              initialFavoritesCount={combination.favoritesCount}
+            />
+          ) : (
+            <Badge variant="secondary">{compactNumber(combination.favoritesCount)} favs</Badge>
+          )}
+          <CopyLinkButton />
+          <Link
+            className="rounded-full border border-white/10 px-4 py-2 text-sm"
+            href={`/?combo=${combination.publicSlug}`}
+          >
+            Abrir en dashboard
           </Link>
         </div>
       </div>

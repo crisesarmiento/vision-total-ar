@@ -10,7 +10,13 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: [".next/**", "public/sw.js", "public/workbox-*.js"],
+  },
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    ignores: [".next/**", "public/sw.js", "public/workbox-*.js"],
+  },
 ];
 
 export default eslintConfig;
