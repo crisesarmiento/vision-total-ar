@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fromStoredGridPreset } from "./layout-presets";
+import { fromStoredGridPreset, toStoredGridPreset } from "./layout-presets";
 
 describe("fromStoredGridPreset", () => {
   it("falls back to 2x2 when no stored preset exists", () => {
@@ -17,5 +17,9 @@ describe("fromStoredGridPreset", () => {
     expect(fromStoredGridPreset("GRID_2X2")).toBe("2x2");
     expect(fromStoredGridPreset("GRID_3X3")).toBe("3x3");
     expect(fromStoredGridPreset("GRID_4X4")).toBe("4x4");
+  });
+
+  it("stores election mode as CUSTOM so persisted layouts still round-trip", () => {
+    expect(toStoredGridPreset("elecciones")).toBe("CUSTOM");
   });
 });
