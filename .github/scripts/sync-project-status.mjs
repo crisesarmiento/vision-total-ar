@@ -101,11 +101,11 @@ async function getWorkItems({ repoOwner, repoName, token }) {
 
   const [issues, pullRequests] = await Promise.all([
     githubRestPaginated(
-      `/repos/${repoOwner}/${repoName}/issues?state=open&per_page=100`,
+      `/repos/${repoOwner}/${repoName}/issues?state=all&per_page=100`,
       token,
     ),
     githubRestPaginated(
-      `/repos/${repoOwner}/${repoName}/pulls?state=open&per_page=100`,
+      `/repos/${repoOwner}/${repoName}/pulls?state=all&per_page=100`,
       token,
     ),
   ]);
