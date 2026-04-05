@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CopyLinkButton } from "@/components/combo/copy-link-button";
 import { FavoriteCombinationButton } from "@/components/combo/favorite-combination-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,6 +78,7 @@ export default async function PublicCombinationPage({
           ) : (
             <Badge variant="secondary">{compactNumber(combination.favoritesCount)} favs</Badge>
           )}
+          <CopyLinkButton />
           <Link
             className="rounded-full border border-white/10 px-4 py-2 text-sm"
             href={`/?combo=${combination.publicSlug}`}
