@@ -6,6 +6,14 @@ export type LayoutPresetId =
   | "4x4"
   | "custom";
 
+export type StoredGridPreset =
+  | "GRID_1"
+  | "GRID_2X1"
+  | "GRID_2X2"
+  | "GRID_3X3"
+  | "GRID_4X4"
+  | "CUSTOM";
+
 export type GridPreset = {
   id: LayoutPresetId;
   name: string;
@@ -58,6 +66,38 @@ export const GRID_PRESETS: GridPreset[] = [
   },
 ];
 
+const STORED_GRID_PRESET_BY_LAYOUT: Record<LayoutPresetId, StoredGridPreset> = {
+  "1x1": "GRID_1",
+  "2x1": "GRID_2X1",
+  "2x2": "GRID_2X2",
+  "3x3": "GRID_3X3",
+  "4x4": "GRID_4X4",
+  custom: "CUSTOM",
+};
+
+const LAYOUT_PRESET_BY_STORED_GRID: Record<StoredGridPreset, LayoutPresetId> = {
+  GRID_1: "1x1",
+  GRID_2X1: "2x1",
+  GRID_2X2: "2x2",
+  GRID_3X3: "3x3",
+  GRID_4X4: "4x4",
+  CUSTOM: "custom",
+};
+
+export function isLayoutPresetId(value: unknown): value is LayoutPresetId {
+  return GRID_PRESETS.some((preset) => preset.id === value) || value === "custom";
+}
+
 export function getPresetById(id: LayoutPresetId) {
   return GRID_PRESETS.find((preset) => preset.id === id) ?? GRID_PRESETS[2];
+}
+
+export function toStoredGridPreset(id: LayoutPresetId): StoredGridPreset {
+  return STORED_GRID_PRESET_BY_LAYOUT[id];
+}
+
+export function fromStoredGridPreset(
+  value: StoredGridPreset | null | undefined,
+): LayoutPresetId {
+  return value ? LAYOUT_PRESET_BY_STORED_GRID[value] : "2x2";
 }

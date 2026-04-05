@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { dashboardLayoutSchema } from "@/lib/dashboard-layout";
+import { toStoredGridPreset, type LayoutPresetId } from "@/lib/layout-presets";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 
@@ -62,4 +64,27 @@ export async function updatePreferences(
 
   revalidatePath("/");
   revalidatePath("/configuracion");
+}
+
+export async function saveLayoutPreference(
+  preset: LayoutPresetId,
+  layoutJson: unknown,
+) {
+  const session = await requireSession();
+  const payload = dashboardLayoutSchema.parse(layoutJson);
+
+  await prisma.userPreference.upsert({
+    where: {
+      userId: session.user.id,
+    },
+    update: {
+      defaultGridPreset: toStoredGridPreset(preset),
+      defaultLayoutJson: payload,
+    },
+    create: {
+      userId: session.user.id,
+      defaultGridPreset: toStoredGridPreset(preset),
+      defaultLayoutJson: payload,
+    },
+  });
 }
