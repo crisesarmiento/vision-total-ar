@@ -41,7 +41,6 @@ cp .env.example .env
 
 3. Completar al menos:
 - `DATABASE_URL`
-- `PRISMA_DIRECT_TCP_URL`
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL`
 - `NEXT_PUBLIC_APP_URL`
@@ -67,7 +66,6 @@ npm run dev
 ## Variables de entorno
 ```bash
 DATABASE_URL=
-PRISMA_DIRECT_TCP_URL=
 BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=
 NEXT_PUBLIC_APP_URL=
@@ -100,9 +98,16 @@ npm run prisma:studio
 ## Prisma y base de datos
 - El proyecto usa Prisma 7 con `prisma.config.ts`.
 - `DATABASE_URL` se usa para Prisma CLI y migraciones.
-- `PRISMA_DIRECT_TCP_URL` se usa para el `PrismaClient` en runtime con Prisma Postgres.
-- El cliente usa `@prisma/adapter-ppg`.
-- Si Prisma Postgres te entrega una sola URL `postgres://...`, podés usarla temporalmente como `PRISMA_DIRECT_TCP_URL`, pero la configuración recomendada es guardar también la URL de `DATABASE_URL` desde el dashboard de Prisma.
+- El runtime usa `PrismaClient` con `@prisma/adapter-neon`.
+- Durante el cutover, el runtime prioriza `PRISMA_DIRECT_TCP_URL` para permitir una migración escalonada sin romper producción si `DATABASE_URL` todavía apunta al proveedor anterior.
+- Una vez completada la migración, la configuración objetivo es que `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` apunten ambas a Neon, y luego se puede simplificar el fallback legacy en un follow-up.
+
+## Migración de Prisma Postgres a Neon
+- La base objetivo es Neon PostgreSQL manteniendo Prisma ORM.
+- Crear la base en Neon y exportar la cadena `postgresql://...` como `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` durante el cutover.
+- Migrar esquema y datos antes del cutover de producción.
+- Validar auth, homepage, combinaciones públicas, favoritos y preferencias después del cambio.
+- Documentar rollback antes de tocar production.
 
 ## Auth
 - Better Auth expone rutas en `app/api/auth/[...all]/route.ts`

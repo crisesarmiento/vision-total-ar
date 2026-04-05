@@ -1,4 +1,4 @@
-import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 
 declare global {
@@ -14,7 +14,9 @@ if (!connectionString) {
   );
 }
 
-const adapter = new PrismaPostgresAdapter({
+process.env.DATABASE_URL = connectionString;
+
+const adapter = new PrismaNeon({
   connectionString,
 });
 
