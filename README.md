@@ -122,8 +122,13 @@ GitHub Actions ejecuta:
 - `npm run typecheck`
 - `npm run test`
 - `npm run build`
+- `Dependency Review` en pull requests
+- `CodeQL` en PRs, pushes y schedule
 
-Archivo: `.github/workflows/ci.yml`
+Archivos:
+- `.github/workflows/ci.yml`
+- `.github/workflows/dependency-review.yml`
+- `.github/workflows/codeql.yml`
 
 ## Flujo de ramas
 - `main`: producción
@@ -216,11 +221,14 @@ Aplicar manualmente en GitHub:
   - Require pull request before merge
 
 Checks obligatorios:
-- `Lint`
-- `Typecheck`
-- `Test`
-- `Build`
+- `quality`
+- `Dependency Review`
+- `CodeQL`
 - `Project Mirror` si el repo decide volverlo obligatorio
+
+## Seguridad
+- Seguir [SECURITY.md](./SECURITY.md) para disclosure responsable
+- Usar GitHub private vulnerability reporting en vez de issues públicos para reportes sensibles
 
 ## Estado de verificación
 Validado localmente:
