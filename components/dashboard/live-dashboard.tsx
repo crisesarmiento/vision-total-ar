@@ -23,13 +23,14 @@ import {
   Volume2,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
   markCombinationAsUsed,
   toggleFavoriteChannel,
   trackChannelView,
 } from "@/actions/combinations";
+import { saveLayoutPreference as persistLayoutPreference } from "@/actions/user";
 import { NewsTicker } from "@/components/dashboard/news-ticker";
 import { PlayerTile } from "@/components/dashboard/player-tile";
 import { SaveCombinationDialog } from "@/components/dashboard/save-combination-dialog";
@@ -37,8 +38,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import type { DashboardLayout } from "@/lib/dashboard-layout";
 import { channels, getChannelById } from "@/lib/channels";
-import { GRID_PRESETS, getPresetById } from "@/lib/layout-presets";
+import { GRID_PRESETS, getPresetById, type LayoutPresetId } from "@/lib/layout-presets";
 import type { TickerItem } from "@/lib/rss";
 import { compactNumber, cn } from "@/lib/utils";
 import type { LiveChannelSnapshot } from "@/lib/youtube";
@@ -64,6 +66,8 @@ type LiveDashboardProps = {
   favoriteChannelIds: string[];
   initialLiveSnapshots: Record<string, LiveChannelSnapshot>;
   initialTickerItems: TickerItem[];
+  initialPreset: LayoutPresetId;
+  initialLayout: DashboardLayout | null;
 };
 
 export function LiveDashboard({
@@ -72,6 +76,8 @@ export function LiveDashboard({
   favoriteChannelIds,
   initialLiveSnapshots,
   initialTickerItems,
+  initialPreset,
+  initialLayout,
 }: LiveDashboardProps) {
   const sensors = useSensors(useSensor(PointerSensor));
   const [syncPlaybackSignal, setSyncPlaybackSignal] = useState<"play" | "pause" | null>(
@@ -81,10 +87,16 @@ export function LiveDashboard({
   const [search, setSearch] = useState("");
   const [favoriteIds, setFavoriteIds] = useState(favoriteChannelIds);
   const [isPending, startTransition] = useTransition();
+  const hasAppliedInitialLayout = useRef(false);
+  const lastSavedLayout = useRef<string | null>(null);
+  const queuedLayout = useRef<DashboardLayout | null>(null);
+  const queuedLayoutKey = useRef<string | null>(null);
+  const isSavingLayout = useRef(false);
   const {
     focusedPlayerId,
     focusPlayer,
     globalMuted,
+    hydrateLayout,
     layoutPreset,
     players,
     reorderPlayers,
@@ -149,6 +161,23 @@ export function LiveDashboard({
   }, [favoriteIds, search]);
 
   useEffect(() => {
+    if (hasAppliedInitialLayout.current) {
+      return;
+    }
+
+    if (initialLayout) {
+      hydrateLayout(initialLayout);
+      lastSavedLayout.current = JSON.stringify(initialLayout);
+    } else {
+      if (initialPreset !== layoutPreset) {
+        setPreset(initialPreset);
+      }
+    }
+
+    hasAppliedInitialLayout.current = true;
+  }, [hydrateLayout, initialLayout, initialPreset, layoutPreset, setPreset]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
@@ -188,6 +217,65 @@ export function LiveDashboard({
 
     return () => window.clearInterval(interval);
   }, [user, visiblePlayers]);
+
+  useEffect(() => {
+    if (!user || !hasAppliedInitialLayout.current) {
+      return;
+    }
+
+    const serializedLayout = JSON.stringify(layoutPayload);
+
+    if (!lastSavedLayout.current) {
+      lastSavedLayout.current = serializedLayout;
+      return;
+    }
+
+    if (serializedLayout === lastSavedLayout.current || serializedLayout === queuedLayoutKey.current) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      queuedLayout.current = layoutPayload;
+      queuedLayoutKey.current = serializedLayout;
+
+      const processSaveQueue = async () => {
+        if (isSavingLayout.current) {
+          return;
+        }
+
+        isSavingLayout.current = true;
+
+        try {
+          while (queuedLayout.current && queuedLayoutKey.current !== lastSavedLayout.current) {
+            const nextLayout = queuedLayout.current;
+            const nextLayoutKey = queuedLayoutKey.current;
+
+            try {
+              await persistLayoutPreference(nextLayout.preset, nextLayout);
+              lastSavedLayout.current = nextLayoutKey;
+
+              if (queuedLayoutKey.current === nextLayoutKey) {
+                queuedLayout.current = null;
+                queuedLayoutKey.current = null;
+              }
+            } catch {
+              await new Promise((resolve) => window.setTimeout(resolve, 5_000));
+            }
+          }
+        } finally {
+          isSavingLayout.current = false;
+
+          if (queuedLayout.current && queuedLayoutKey.current !== lastSavedLayout.current) {
+            void processSaveQueue();
+          }
+        }
+      };
+
+      void processSaveQueue();
+    }, 1_500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [layoutPayload, user]);
 
   const onDragEnd = (event: DragEndEvent) => {
     if (!event.over) {

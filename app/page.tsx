@@ -1,4 +1,6 @@
 import { LiveDashboard } from "@/components/dashboard/live-dashboard";
+import { parseDashboardLayout } from "@/lib/dashboard-layout";
+import { fromStoredGridPreset, type StoredGridPreset } from "@/lib/layout-presets";
 import { prisma } from "@/lib/prisma";
 import { getTickerItems } from "@/lib/rss";
 import { getSession } from "@/lib/session";
@@ -15,13 +17,18 @@ type FeaturedCombination = {
 };
 
 export default async function Home() {
-  const [session, featuredCombinations, liveSnapshots, tickerItems]: [
-    Awaited<ReturnType<typeof getSession>>,
+  const session = await getSession();
+
+  const [featuredCombinations, liveSnapshots, tickerItems, favoriteChannels, userPreference]: [
     FeaturedCombination[],
     Awaited<ReturnType<typeof getLiveSnapshots>>,
     Awaited<ReturnType<typeof getTickerItems>>,
+    Array<{ channelId: string }>,
+    {
+      defaultGridPreset: StoredGridPreset;
+      defaultLayoutJson: unknown;
+    } | null,
   ] = await Promise.all([
-    getSession(),
     prisma.savedCombination.findMany({
       where: {
         visibility: "PUBLIC",
@@ -38,34 +45,48 @@ export default async function Home() {
     }),
     getLiveSnapshots(),
     getTickerItems(),
+    session
+      ? prisma.favoriteChannel.findMany({
+          where: {
+            userId: session.user.id,
+          },
+          select: {
+            channelId: true,
+          },
+        })
+      : Promise.resolve([]),
+    session
+      ? prisma.userPreference.findUnique({
+          where: {
+            userId: session.user.id,
+          },
+          select: {
+            defaultGridPreset: true,
+            defaultLayoutJson: true,
+          },
+        })
+      : Promise.resolve(null),
   ]);
 
-  const favoriteChannels: Array<{ channelId: string }> = session
-    ? await prisma.favoriteChannel.findMany({
-        where: {
-          userId: session.user.id,
-        },
-        select: {
-          channelId: true,
-        },
-      })
-    : [];
+  const initialLayout = parseDashboardLayout(userPreference?.defaultLayoutJson ?? null);
+
+  const user = session
+    ? {
+        id: session.user.id,
+        name: session.user.name,
+        image: session.user.image,
+      }
+    : null;
 
   return (
     <LiveDashboard
-      user={
-        session
-          ? {
-              id: session.user.id,
-              name: session.user.name,
-              image: session.user.image,
-            }
-          : null
-      }
+      user={user}
       featuredCombinations={featuredCombinations}
       favoriteChannelIds={favoriteChannels.map((item) => item.channelId)}
       initialLiveSnapshots={liveSnapshots}
       initialTickerItems={tickerItems}
+      initialPreset={fromStoredGridPreset(userPreference?.defaultGridPreset)}
+      initialLayout={initialLayout}
     />
   );
 }

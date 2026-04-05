@@ -127,4 +127,29 @@ describe("dashboard store setPreset", () => {
     ]);
     expect(useDashboardStore.getState().players).toHaveLength(4);
   });
+
+  it("hydrates a saved layout while preserving the saved player order", () => {
+    useDashboardStore.getState().hydrateLayout({
+      preset: "3x3",
+      players: [
+        makePlayer(4, "a24"),
+        makePlayer(1, "lnmas"),
+        makePlayer(2, "tn"),
+        makePlayer(3, "c5n"),
+      ],
+    });
+
+    expect(useDashboardStore.getState().layoutPreset).toBe("3x3");
+    expect(useDashboardStore.getState().players).toEqual([
+      makePlayer(4, "a24"),
+      makePlayer(1, "lnmas"),
+      makePlayer(2, "tn"),
+      makePlayer(3, "c5n"),
+      { slotId: "slot-5", channelId: "tn", muted: true, volume: 0 },
+      { slotId: "slot-6", channelId: "c5n", muted: true, volume: 0 },
+      { slotId: "slot-7", channelId: "lnmas", muted: true, volume: 0 },
+      { slotId: "slot-8", channelId: "a24", muted: true, volume: 0 },
+      { slotId: "slot-9", channelId: "tn", muted: true, volume: 0 },
+    ]);
+  });
 });
