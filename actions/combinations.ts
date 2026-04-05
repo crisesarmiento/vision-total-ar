@@ -111,6 +111,96 @@ export async function toggleFavoriteChannel(channelId: string) {
   return !existing;
 }
 
+export async function toggleFavoriteCombination(combinationId: string) {
+  const session = await requireSession();
+  const combination = await prisma.savedCombination.findFirst({
+    where: {
+      id: combinationId,
+      visibility: "PUBLIC",
+    },
+    select: {
+      id: true,
+      publicSlug: true,
+    },
+  });
+
+  if (!combination) {
+    throw new Error("No encontramos esa combinación pública.");
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const existing = await tx.favoritedCombination.findUnique({
+      where: {
+        userId_combinationId: {
+          userId: session.user.id,
+          combinationId,
+        },
+      },
+    });
+
+    if (existing) {
+      await tx.favoritedCombination.delete({
+        where: {
+          userId_combinationId: {
+            userId: session.user.id,
+            combinationId,
+          },
+        },
+      });
+
+      const updated = await tx.savedCombination.update({
+        where: {
+          id: combinationId,
+        },
+        data: {
+          favoritesCount: {
+            decrement: 1,
+          },
+        },
+        select: {
+          favoritesCount: true,
+        },
+      });
+
+      return {
+        favorited: false,
+        favoritesCount: updated.favoritesCount,
+      };
+    }
+
+    await tx.favoritedCombination.create({
+      data: {
+        userId: session.user.id,
+        combinationId,
+      },
+    });
+
+    const updated = await tx.savedCombination.update({
+      where: {
+        id: combinationId,
+      },
+      data: {
+        favoritesCount: {
+          increment: 1,
+        },
+      },
+      select: {
+        favoritesCount: true,
+      },
+    });
+
+    return {
+      favorited: true,
+      favoritesCount: updated.favoritesCount,
+    };
+  });
+
+  revalidatePath("/");
+  revalidatePath(`/combo/${combination.publicSlug}`);
+
+  return result;
+}
+
 export async function trackChannelView(channelId: string, secondsWatched = 15) {
   const session = await requireSession();
 
