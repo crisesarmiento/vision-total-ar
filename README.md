@@ -97,13 +97,14 @@ npm run prisma:studio
 
 ## Prisma y base de datos
 - El proyecto usa Prisma 7 con `prisma.config.ts`.
-- `DATABASE_URL` se usa para Prisma CLI, migraciones y runtime.
+- `DATABASE_URL` se usa para Prisma CLI y migraciones.
 - El runtime usa `PrismaClient` con `@prisma/adapter-neon`.
-- `PRISMA_DIRECT_TCP_URL` se admite solo como compatibilidad temporal durante una migración; la configuración objetivo es usar únicamente `DATABASE_URL`.
+- Durante el cutover, el runtime prioriza `PRISMA_DIRECT_TCP_URL` para permitir una migración escalonada sin romper producción si `DATABASE_URL` todavía apunta al proveedor anterior.
+- Una vez completada la migración, la configuración objetivo es que `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` apunten ambas a Neon, y luego se puede simplificar el fallback legacy en un follow-up.
 
 ## Migración de Prisma Postgres a Neon
 - La base objetivo es Neon PostgreSQL manteniendo Prisma ORM.
-- Crear la base en Neon y exportar la cadena `postgresql://...` como `DATABASE_URL` en local, preview y production.
+- Crear la base en Neon y exportar la cadena `postgresql://...` como `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` durante el cutover.
 - Migrar esquema y datos antes del cutover de producción.
 - Validar auth, homepage, combinaciones públicas, favoritos y preferencias después del cambio.
 - Documentar rollback antes de tocar production.
