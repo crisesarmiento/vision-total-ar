@@ -99,5 +99,9 @@ export function toStoredGridPreset(id: LayoutPresetId): StoredGridPreset {
 export function fromStoredGridPreset(
   value: StoredGridPreset | null | undefined,
 ): LayoutPresetId {
-  return value ? LAYOUT_PRESET_BY_STORED_GRID[value] : "2x2";
+  if (!value || value === "CUSTOM") {
+    return "2x2";
+  }
+
+  return LAYOUT_PRESET_BY_STORED_GRID[value];
 }
