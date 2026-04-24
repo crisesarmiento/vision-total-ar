@@ -1,0 +1,12 @@
+.git
+.next
+.vercel
+node_modules
+coverage
+*.log
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+public/sw.js
+public/workbox-*.js

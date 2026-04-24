@@ -6,7 +6,7 @@ Vision AR es una plataforma premium de multiview para seguir todas las visiones 
 - Next.js 15 App Router + React 19
 - TypeScript strict
 - Tailwind CSS + componentes estilo shadcn/ui
-- Prisma ORM + Prisma Postgres
+- Prisma ORM + Neon/PostgreSQL
 - Better Auth
 - Zustand
 - TanStack Query
@@ -27,6 +27,32 @@ Vision AR es una plataforma premium de multiview para seguir todas las visiones 
 - PWA, sitemap, robots, Open Graph e icon generado
 
 ## Primeros pasos
+### Opción recomendada: Docker Compose
+1. Levantar PostgreSQL local, aplicar esquema, sembrar datos demo y arrancar Next.js:
+
+```bash
+docker compose up
+```
+
+La app queda disponible en `http://localhost:3000`.
+
+El contenedor usa PostgreSQL local con datos persistentes en un volumen Docker:
+- dentro de Compose: `db:5432`
+- desde el host: `localhost:5433`
+
+Usuario demo:
+- email: `demo@visionar.local`
+- password: el seed lo imprime al terminar. Podés sobrescribirlo con `SEED_DEMO_PASSWORD`.
+
+Para resetear completamente la base local sembrada:
+
+```bash
+docker compose down -v
+```
+
+Esta configuración de Docker Compose es solo para desarrollo local. Producción sigue desplegándose en Vercel.
+
+### Opción manual sin Docker
 1. Instalar dependencias:
 
 ```bash
@@ -41,6 +67,7 @@ cp .env.example .env
 
 3. Completar al menos:
 - `DATABASE_URL`
+- `DATABASE_DRIVER`
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL`
 - `NEXT_PUBLIC_APP_URL`
@@ -57,7 +84,29 @@ npm run prisma:generate
 npm run prisma:migrate -- --name init
 ```
 
-6. Levantar el proyecto:
+6. Cargar datos demo locales:
+
+```bash
+npm run db:seed
+```
+
+Si estás usando una rama/base remota de Neon para desarrollo local, habilitá explícitamente el seed remoto:
+
+```bash
+DATABASE_SEED_ALLOW_REMOTE=true npm run db:seed
+```
+
+También podés generar Prisma Client, aplicar el esquema y sembrar datos con un solo comando:
+
+```bash
+npm run db:setup
+```
+
+Usuario demo:
+- email: `demo@visionar.local`
+- password: el seed lo imprime al terminar. Podés sobrescribirlo con `SEED_DEMO_PASSWORD`.
+
+7. Levantar el proyecto:
 
 ```bash
 npm run dev
@@ -66,6 +115,10 @@ npm run dev
 ## Variables de entorno
 ```bash
 DATABASE_URL=
+DATABASE_DRIVER=neon
+PRISMA_DIRECT_TCP_URL=
+DATABASE_SEED_ALLOW_REMOTE=false
+SEED_DEMO_PASSWORD=
 BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=
 NEXT_PUBLIC_APP_URL=
@@ -92,13 +145,15 @@ npm run version:major
 npm run prisma:generate
 npm run prisma:migrate
 npm run db:push
+npm run db:seed
+npm run db:setup
 npm run prisma:studio
 ```
 
 ## Prisma y base de datos
 - El proyecto usa Prisma 7 con `prisma.config.ts`.
 - `DATABASE_URL` se usa para Prisma CLI y migraciones.
-- El runtime usa `PrismaClient` con `@prisma/adapter-neon`.
+- El runtime usa `PrismaClient` con `DATABASE_DRIVER=neon` por defecto y `DATABASE_DRIVER=pg` para PostgreSQL local en Docker Compose.
 - Durante el cutover, el runtime prioriza `PRISMA_DIRECT_TCP_URL` para permitir una migración escalonada sin romper producción si `DATABASE_URL` todavía apunta al proveedor anterior.
 - Una vez completada la migración, la configuración objetivo es que `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` apunten ambas a Neon, y luego se puede simplificar el fallback legacy en un follow-up.
 
@@ -108,6 +163,7 @@ npm run prisma:studio
 - Migrar esquema y datos antes del cutover de producción.
 - Validar auth, homepage, combinaciones públicas, favoritos y preferencias después del cambio.
 - Documentar rollback antes de tocar production.
+- `npm run db:seed` se niega a correr en production y requiere `DATABASE_SEED_ALLOW_REMOTE=true` para bases no locales, incluyendo Neon preview/dev.
 
 ## Auth
 - Better Auth expone rutas en `app/api/auth/[...all]/route.ts`
