@@ -23,7 +23,7 @@ jobs:
   migrate:
     name: Prisma migrate ${{ inputs.command }} on production
     runs-on: ubuntu-latest
-    environment: production
+    environment: Production
     env:
       DATABASE_DRIVER: neon
       DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}

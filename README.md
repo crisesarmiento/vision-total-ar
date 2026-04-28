@@ -157,7 +157,7 @@ npm run prisma:studio
 - `DATABASE_URL` se usa para Prisma CLI y migraciones.
 - El runtime usa `PrismaClient` con `DATABASE_DRIVER=neon` por defecto y `DATABASE_DRIVER=pg` para PostgreSQL local en Docker Compose.
 - Producción debe usar `npm run prisma:migrate:deploy`; no usar `db:push`, `prisma migrate dev` ni `db:seed` contra production.
-- El workflow manual `.github/workflows/production-db-migrations.yml` ejecuta `status` o `deploy` con el secret protegido `PRODUCTION_DATABASE_URL` del environment `production`.
+- El workflow manual `.github/workflows/production-db-migrations.yml` ejecuta `status` o `deploy` con el secret protegido `PRODUCTION_DATABASE_URL` del environment `Production`.
 - Durante el cutover, el runtime prioriza `PRISMA_DIRECT_TCP_URL` para permitir una migración escalonada sin romper producción si `DATABASE_URL` todavía apunta al proveedor anterior.
 - Una vez completada la migración, la configuración objetivo es que `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` apunten ambas a Neon, y luego se puede simplificar el fallback legacy en un follow-up.
 

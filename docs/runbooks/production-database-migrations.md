@@ -8,7 +8,7 @@ This runbook was added after CRIS-254, where production returned 500 because `pu
 
 ## Required GitHub setup
 
-Create a GitHub Environment named `production` and configure:
+Use the GitHub Environment named `Production` and configure:
 
 - Required reviewers for manual approval before the workflow can access secrets.
 - Environment secret `PRODUCTION_DATABASE_URL` with the Neon production direct database connection string.
