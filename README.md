@@ -144,6 +144,8 @@ npm run version:minor
 npm run version:major
 npm run prisma:generate
 npm run prisma:migrate
+npm run prisma:migrate:status
+npm run prisma:migrate:deploy
 npm run db:push
 npm run db:seed
 npm run db:setup
@@ -154,6 +156,8 @@ npm run prisma:studio
 - El proyecto usa Prisma 7 con `prisma.config.ts`.
 - `DATABASE_URL` se usa para Prisma CLI y migraciones.
 - El runtime usa `PrismaClient` con `DATABASE_DRIVER=neon` por defecto y `DATABASE_DRIVER=pg` para PostgreSQL local en Docker Compose.
+- Producción debe usar `npm run prisma:migrate:deploy`; no usar `db:push`, `prisma migrate dev` ni `db:seed` contra production.
+- El workflow manual `.github/workflows/production-db-migrations.yml` ejecuta `status` o `deploy` con el secret protegido `PRODUCTION_DATABASE_URL` del environment `Production`.
 - Durante el cutover, el runtime prioriza `PRISMA_DIRECT_TCP_URL` para permitir una migración escalonada sin romper producción si `DATABASE_URL` todavía apunta al proveedor anterior.
 - Una vez completada la migración, la configuración objetivo es que `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` apunten ambas a Neon, y luego se puede simplificar el fallback legacy en un follow-up.
 
@@ -207,8 +211,9 @@ Archivos:
 6. Mergear a `develop`.
 7. Si la versión cambió, GitHub crea una prerelease `vX.Y.Z-rc.N`.
 8. Abrir release PR de `develop` hacia `main`.
-9. Al mergear a `main`, GitHub crea la release estable `vX.Y.Z`.
-10. Deploy de producción desde `main`.
+9. Revisar si hay cambios en `prisma/migrations` y correr el workflow `Production Database Migrations` con `status`; si hay migraciones pendientes, correr `deploy` antes del merge.
+10. Al mergear a `main`, GitHub crea la release estable `vX.Y.Z`.
+11. Deploy de producción desde `main`.
 
 ## Linear
 Proyecto creado:
@@ -258,6 +263,10 @@ Config recomendada:
 - Convención recomendada: `v0.1.0`, `v0.2.0`, etc.
 - Crear el milestone cuando se abre un release batch real desde `develop`.
 - No usar milestones para trabajo diario ni para reemplazar cycles de Linear.
+
+## Runbooks
+- [Migraciones de producción con Neon y Vercel](docs/runbooks/production-database-migrations.md)
+- [Migración de Prisma Postgres a Neon](docs/runbooks/neon-migration.md)
 
 ## Versionado y releases
 - Fuente de verdad: `package.json`.

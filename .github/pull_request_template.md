@@ -11,6 +11,7 @@
 - [ ] `npm run typecheck`
 - [ ] `npm run test`
 - [ ] `npm run build`
+- [ ] If this is a release PR or includes `prisma/migrations`, run the production migration status/deploy workflow and link the run.
 
 ## Preview
 - Add the Vercel preview URL here once available.
