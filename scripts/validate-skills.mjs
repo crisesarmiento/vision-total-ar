@@ -160,6 +160,11 @@ async function main() {
     scanForSecrets(await readFile(file, "utf8"), file);
   }
 
+  const agentsPath = path.join(root, "AGENTS.md");
+  if (await exists(agentsPath)) {
+    scanForSecrets(await readFile(agentsPath, "utf8"), agentsPath);
+  }
+
   if (errors.length > 0) {
     console.error("Skill validation failed:");
     for (const error of errors) {
