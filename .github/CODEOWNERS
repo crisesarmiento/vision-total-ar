@@ -1,1 +1,4 @@
 * @crisesarmiento
+.agents/skills/** @crisesarmiento
+docs/skills/** @crisesarmiento
+scripts/validate-skills.mjs @crisesarmiento

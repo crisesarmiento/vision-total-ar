@@ -268,6 +268,12 @@ Config recomendada:
 - [Migraciones de producción con Neon y Vercel](docs/runbooks/production-database-migrations.md)
 - [Migración de Prisma Postgres a Neon](docs/runbooks/neon-migration.md)
 
+## Agent skills
+- Repo-scoped public skills live in `.agents/skills`.
+- Public skill policy: [docs/skills/public-skill-policy.md](docs/skills/public-skill-policy.md)
+- Private maintainer skills setup: [docs/skills/private-skills.md](docs/skills/private-skills.md)
+- Validate public skills with `npm run skills:validate`.
+
 ## Versionado y releases
 - Fuente de verdad: `package.json`.
 - Workflow de prerelease: `.github/workflows/release-prerelease.yml`
