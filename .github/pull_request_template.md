@@ -12,6 +12,7 @@
 - [ ] `npm run test`
 - [ ] `npm run build`
 - [ ] If this is a release PR or includes `prisma/migrations`, run the production migration status/deploy workflow and link the run.
+- [ ] If this changes durable project context, update `AGENTS.md` or the relevant repo skill under `.agents/skills`.
 
 ## Preview
 - Add the Vercel preview URL here once available.
