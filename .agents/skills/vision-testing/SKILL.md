@@ -7,12 +7,14 @@ description: Use when deciding how to validate Vision AR changes, including lint
 
 Use this skill before finishing implementation, reviewing a PR, or debugging failed checks.
 
+Read root `AGENTS.md` first for current project context, workflow rules, and skill-maintenance expectations.
+
 ## Standard Validation
 
 Run these for most code changes:
 
 - `npm run lint`
-- `npm run skills:validate` when `.agents/skills`, `docs/skills`, or the validator changes
+- `npm run skills:validate` when `.agents/skills`, `docs/skills`, `AGENTS.md`, or the validator changes
 - `npm run typecheck`
 - `npm run test`
 - `npm run build`

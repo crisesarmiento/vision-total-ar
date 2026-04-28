@@ -7,6 +7,8 @@ description: Use when planning or reviewing Vision AR architecture changes, incl
 
 Use this skill for planning, technical design, architecture review, or when a ticket reveals broader structural risk.
 
+Read root `AGENTS.md` first for current project context, workflow rules, and skill-maintenance expectations.
+
 ## Review Areas
 
 - Data model and Prisma migrations

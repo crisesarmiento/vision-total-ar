@@ -7,6 +7,8 @@ description: Use when updating Vision AR README content, runbooks, pull request 
 
 Use this skill for public docs, runbooks, release notes, PR bodies, and Linear issue descriptions.
 
+Read root `AGENTS.md` first for current project context, workflow rules, and skill-maintenance expectations.
+
 ## Style
 
 - Be concise, operational, and public-safe.

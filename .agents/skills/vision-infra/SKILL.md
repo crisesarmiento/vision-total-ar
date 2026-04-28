@@ -7,6 +7,8 @@ description: Use when working on public-safe Vision AR infrastructure workflows,
 
 Use this skill for infrastructure, release, CI/CD, Vercel, Neon, and GitHub Actions work.
 
+Read root `AGENTS.md` first for current project context, workflow rules, and skill-maintenance expectations.
+
 ## Public-Safe Rules
 
 - Document environment variable names, not values.

@@ -7,6 +7,8 @@ description: Use when working a Vision AR Linear issue through the repo workflow
 
 Use this skill when a task names a Linear issue, asks to start a ticket, asks to create a PR, or asks why Linear/GitHub status is out of sync.
 
+Read root `AGENTS.md` first for current project context, workflow rules, and skill-maintenance expectations.
+
 ## Workflow
 
 1. Read the Linear issue and confirm project `Vision AR`, team `CRIS`, assignee, priority, labels, cycle, and milestone.

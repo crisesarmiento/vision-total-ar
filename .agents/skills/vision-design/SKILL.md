@@ -7,6 +7,8 @@ description: Use when implementing or reviewing Vision AR frontend design work, 
 
 Use this skill for UI implementation, visual QA, and design review.
 
+Read root `AGENTS.md` first for current project context, workflow rules, and skill-maintenance expectations.
+
 ## Principles
 
 - Preserve the established Vision AR visual language unless a ticket explicitly changes it.

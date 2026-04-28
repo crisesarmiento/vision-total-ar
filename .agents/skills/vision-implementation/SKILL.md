@@ -7,6 +7,8 @@ description: Use when implementing Vision AR code changes in the Next.js, Prisma
 
 Use this skill for code changes, refactors, bug fixes, feature work, and ticket implementation.
 
+Read root `AGENTS.md` first for current project context, workflow rules, and skill-maintenance expectations.
+
 ## Defaults
 
 - Build from `develop` and open feature PRs to `develop`.
