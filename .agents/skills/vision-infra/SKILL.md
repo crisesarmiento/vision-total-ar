@@ -23,5 +23,6 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - Release changes should respect `develop` as integration and `main` as production.
 - Migration changes should update the production migration runbook and PR checklist.
 - Vercel changes should verify preview and production behavior separately.
+- Rate limiting changes should keep repo-side limits public-safe, document Vercel WAF behavior without private dashboard details, and verify `/api/live`, `/api/ticker`, and auth routes.
 
 For incidents requiring private credentials or dashboards, use private maintainer skills and record only public-safe evidence in issues and PRs.

@@ -179,6 +179,7 @@ npm run prisma:studio
 - `lib/channels.ts`: catálogo de señales
 - `lib/youtube.ts`: status y viewers en vivo con cache corto
 - `lib/rss.ts`: agregación del ticker
+- `docs/runbooks/rate-limiting.md`: límites repo-side para auth y polling, más nota operativa para Vercel WAF
 
 ## CI
 GitHub Actions ejecuta:

@@ -71,6 +71,31 @@ type LiveDashboardProps = {
   comboLayout?: DashboardLayout | null;
 };
 
+class PollingRateLimitError extends Error {
+  constructor() {
+    super("Polling request was rate limited");
+    this.name = "PollingRateLimitError";
+  }
+}
+
+async function fetchPollingJson<T>(url: string) {
+  const response = await fetch(url);
+
+  if (response.status === 429) {
+    throw new PollingRateLimitError();
+  }
+
+  if (!response.ok) {
+    throw new Error(`Polling request failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+function retryPollingQuery(failureCount: number, error: Error) {
+  return !(error instanceof PollingRateLimitError) && failureCount < 3;
+}
+
 export function LiveDashboard({
   user,
   featuredCombinations,
@@ -114,21 +139,17 @@ export function LiveDashboard({
   const { data: liveSnapshots } = useQuery({
     queryKey: ["live-snapshots"],
     initialData: initialLiveSnapshots,
-    queryFn: async () => {
-      const response = await fetch("/api/live");
-      return (await response.json()) as Record<string, LiveChannelSnapshot>;
-    },
+    queryFn: () => fetchPollingJson<Record<string, LiveChannelSnapshot>>("/api/live"),
     refetchInterval: 60_000,
+    retry: retryPollingQuery,
   });
 
   const { data: tickerItems } = useQuery({
     queryKey: ["ticker-items"],
     initialData: initialTickerItems,
-    queryFn: async () => {
-      const response = await fetch("/api/ticker");
-      return (await response.json()) as TickerItem[];
-    },
+    queryFn: () => fetchPollingJson<TickerItem[]>("/api/ticker"),
     refetchInterval: 300_000,
+    retry: retryPollingQuery,
   });
 
   const visiblePlayers = useMemo(
