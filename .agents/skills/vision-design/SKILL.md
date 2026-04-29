@@ -15,6 +15,7 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - Prioritize clarity for long monitoring sessions: readable labels, stable controls, responsive grids, and low-friction channel discovery.
 - Keep Spanish product copy consistent with the app.
 - Avoid generic redesigns or unrelated visual drift.
+- Use `docs/design/vision-ui-conventions.md` as the durable source for reusable UI conventions.
 
 ## Implementation Notes
 
@@ -22,5 +23,6 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - Keep dashboard interactions predictable across desktop and mobile.
 - Add motion only when it clarifies state or improves perceived responsiveness.
 - Validate responsive behavior and accessibility basics for interactive controls.
+- For AI-assisted design research, keep work documentation-first unless a separate implementation ticket authorizes API integration, user data flow, billing, and production validation.
 
 Document design decisions in the PR when a change affects reusable patterns or user workflow.
