@@ -20,8 +20,16 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 4. Move the Linear issue to `In Progress` only when real implementation work begins.
 5. Open PRs to `develop`, not `main`, unless the task is an explicit release PR.
 6. Include the issue ID in the PR title or body.
-7. Apply only GitHub labels that already exist.
-8. Add the PR to the Vision Total AR GitHub Project if it is not automatic, and set status to `In Review` for ready PRs.
+7. Fill PR metadata before handing off:
+   - assign the PR to the maintainer/current user unless the task says otherwise
+   - apply only existing GitHub labels that fit the change
+   - keep the PR body public-safe and include summary, validation, blockers, and linked follow-ups
+   - keep draft PRs in an implementation state and ready PRs in review state
+8. Add the PR to the Vision Total AR GitHub Project if it is not automatic, then align the GitHub Project status with the Linear issue status:
+   - Linear `Todo` or `Backlog` maps to GitHub Project `Todo`
+   - Linear `In Progress` maps to GitHub Project `In Progress`
+   - Linear `In Review` maps to GitHub Project `In Review`
+   - Linear `Done` or `Closed` maps to GitHub Project `Done`
 9. Move Linear to `In Review` once reviewable PR work exists.
 10. After merge, verify Linear moved to `Done`; if not, apply the manual fallback.
 
