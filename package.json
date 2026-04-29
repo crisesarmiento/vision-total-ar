@@ -8,6 +8,7 @@
     "start": "next start",
     "postinstall": "prisma generate",
     "lint": "eslint .",
+    "actions:lint": "node-actionlint",
     "skills:validate": "node scripts/validate-skills.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -70,6 +71,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@tktco/node-actionlint": "^1.6.0",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",

@@ -141,6 +141,7 @@ UPLOADTHING_APP_ID=
 ```bash
 npm run dev
 npm run lint
+npm run actions:lint
 npm run typecheck
 npm run test
 npm run build
