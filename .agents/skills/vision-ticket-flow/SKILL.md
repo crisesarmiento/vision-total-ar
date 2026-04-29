@@ -23,7 +23,8 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 7. Fill PR metadata before handing off:
    - assign the PR to the maintainer/current user unless the task says otherwise
    - apply only existing GitHub labels that fit the change
-   - keep the PR body public-safe and include summary, validation, blockers, and linked follow-ups
+   - keep the PR body public-safe and include summary, validation, blockers, and tracked follow-up IDs
+   - do not include Linear URLs, private project links, or private tracker names in public GitHub text
    - keep draft PRs in an implementation state and ready PRs in review state
 8. Add the PR to the Vision Total AR GitHub Project if it is not automatic, then align the GitHub Project status with the Linear issue status:
    - Linear `Todo` or `Backlog` maps to GitHub Project `Todo`
@@ -35,4 +36,4 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 
 ## Public Safety
 
-Do not include credentials, private dashboard URLs, database connection strings, or account-specific operational steps in issue or PR text. Reference public runbooks for public workflows and private maintainer skills for sensitive production operations.
+Do not include credentials, private dashboard URLs, database connection strings, private Linear URLs, private project links, or account-specific operational steps in issue or PR text. Use CRIS issue IDs for public tracking when needed, and keep the private tracker/project details synchronized through integrations and maintainer workflows. Reference public runbooks for public workflows and private maintainer skills for sensitive production operations.
