@@ -21,6 +21,7 @@ import {
   Play,
   Star,
   Volume2,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -115,6 +116,9 @@ export function LiveDashboard({
   const [favoriteIds, setFavoriteIds] = useState(favoriteChannelIds);
   const [isPending, startTransition] = useTransition();
   const hasAppliedInitialLayout = useRef(false);
+  const sidebarOpenButtonRef = useRef<HTMLButtonElement | null>(null);
+  const sidebarSearchRef = useRef<HTMLInputElement | null>(null);
+  const shouldRestoreSidebarFocus = useRef(false);
   const lastSavedLayout = useRef<string | null>(null);
   const queuedLayout = useRef<DashboardLayout | null>(null);
   const queuedLayoutKey = useRef<string | null>(null);
@@ -209,6 +213,12 @@ export function LiveDashboard({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && sidebarOpen) {
+        shouldRestoreSidebarFocus.current = true;
+        setSidebarOpen(false);
+        return;
+      }
+
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -232,7 +242,7 @@ export function LiveDashboard({
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [focusPlayer, layoutPreset, setPreset, visiblePlayers]);
+  }, [focusPlayer, layoutPreset, setPreset, sidebarOpen, visiblePlayers]);
 
   useEffect(() => {
     if (!user) {
@@ -323,11 +333,22 @@ export function LiveDashboard({
     }
 
     setChannel(slotId, channelId);
+    shouldRestoreSidebarFocus.current = true;
     setSidebarOpen(false);
 
     if (user) {
       void trackChannelView(channelId, 5);
     }
+  };
+
+  const openSidebar = () => {
+    shouldRestoreSidebarFocus.current = true;
+    setSidebarOpen(true);
+  };
+
+  const closeSidebar = () => {
+    shouldRestoreSidebarFocus.current = true;
+    setSidebarOpen(false);
   };
 
   const toggleFavorite = (channelId: string) => {
@@ -354,14 +375,35 @@ export function LiveDashboard({
   const gridColumns =
     preset.columns === 1 ? "grid-cols-1" : preset.columns === 2 ? "md:grid-cols-2" : preset.columns === 3 ? "md:grid-cols-2 xl:grid-cols-3" : "md:grid-cols-2 xl:grid-cols-4";
 
+  useEffect(() => {
+    if (sidebarOpen) {
+      window.setTimeout(() => sidebarSearchRef.current?.focus(), 0);
+      return;
+    }
+
+    if (shouldRestoreSidebarFocus.current) {
+      sidebarOpenButtonRef.current?.focus();
+      shouldRestoreSidebarFocus.current = false;
+    }
+  }, [sidebarOpen]);
+
   return (
     <div className="min-h-screen">
       <div className="mx-auto flex max-w-[1800px] gap-6 px-4 py-4 md:px-6">
+        {sidebarOpen ? (
+          <button
+            type="button"
+            aria-label="Cerrar selector de señales"
+            className="fixed inset-0 z-[35] bg-black/60 backdrop-blur-sm md:hidden"
+            onClick={closeSidebar}
+          />
+        ) : null}
         <aside
           className={cn(
             "fixed inset-y-0 left-0 z-40 w-[320px] border-r border-white/10 bg-slate-950/95 p-4 backdrop-blur-xl transition-transform md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:translate-x-0 md:rounded-[2rem]",
             sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           )}
+          aria-label="Selector de señales"
         >
           <div className="flex h-full flex-col gap-4">
             <div className="flex items-center justify-between">
@@ -371,8 +413,15 @@ export function LiveDashboard({
                 </p>
                 <h1 className="text-2xl font-semibold">Todas las visiones</h1>
               </div>
-              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(false)}>
-                <Menu className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={closeSidebar}
+                aria-label="Cerrar selector de señales"
+                title="Cerrar selector de señales"
+              >
+                <X className="h-4 w-4" />
               </Button>
             </div>
 
@@ -385,9 +434,11 @@ export function LiveDashboard({
               </CardHeader>
               <CardContent className="space-y-4">
                 <Input
+                  ref={sidebarSearchRef}
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Buscar canal o streamer"
+                  aria-label="Buscar canal o streamer"
                 />
                 <div className="max-h-[420px] space-y-2 overflow-auto pr-1">
                   {filteredChannels.map((channel) => {
@@ -397,14 +448,14 @@ export function LiveDashboard({
                     return (
                       <div
                         key={channel.id}
-                        className="flex items-start justify-between rounded-3xl border border-white/10 bg-black/20 px-4 py-3 transition hover:border-primary/40 hover:bg-white/5"
+                        className="flex items-start justify-between gap-3 rounded-3xl border border-white/10 bg-black/20 px-4 py-3 transition hover:border-primary/40 hover:bg-white/5"
                       >
                         <button
                           type="button"
                           onClick={() => assignChannel(channel.id)}
-                          className="flex-1 text-left"
+                          className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="font-medium">{channel.shortName}</span>
                             {isLive ? (
                               <span
@@ -416,13 +467,26 @@ export function LiveDashboard({
                               <Badge variant="secondary">Independiente</Badge>
                             ) : null}
                           </div>
-                          <p className="text-sm text-white/70">{channel.description}</p>
+                          <p className="line-clamp-2 text-sm text-white/70">
+                            {channel.description}
+                          </p>
                         </button>
                         <button
                           type="button"
-                          className="rounded-full p-2 text-white/60 transition hover:bg-white/10 hover:text-white"
+                          className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           onClick={() => toggleFavorite(channel.id)}
                           disabled={isPending}
+                          aria-label={
+                            isFavorite
+                              ? `Quitar ${channel.name} de favoritos`
+                              : `Agregar ${channel.name} a favoritos`
+                          }
+                          aria-pressed={isFavorite}
+                          title={
+                            isFavorite
+                              ? `Quitar ${channel.name} de favoritos`
+                              : `Agregar ${channel.name} a favoritos`
+                          }
                         >
                           <Star
                             className={cn(
@@ -468,7 +532,15 @@ export function LiveDashboard({
           <header className="glass-panel sticky top-4 z-30 flex flex-col gap-4 rounded-[2rem] px-4 py-4 md:px-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <Button variant="secondary" size="icon" className="md:hidden" onClick={() => setSidebarOpen(true)}>
+                <Button
+                  ref={sidebarOpenButtonRef}
+                  variant="secondary"
+                  size="icon"
+                  className="md:hidden"
+                  onClick={openSidebar}
+                  aria-label="Abrir selector de señales"
+                  title="Abrir selector de señales"
+                >
                   <Menu className="h-4 w-4" />
                 </Button>
                 <div>
@@ -481,9 +553,9 @@ export function LiveDashboard({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:justify-end">
                 {user ? (
-                  <>
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button asChild variant="secondary">
                       <Link href="/mis-combinaciones">Mis combinaciones</Link>
                     </Button>
@@ -493,20 +565,22 @@ export function LiveDashboard({
                     <Button asChild variant="secondary">
                       <Link href="/configuracion">Configuración</Link>
                     </Button>
-                  </>
+                  </div>
                 ) : null}
-                <Button variant="secondary" onClick={toggleGlobalMute}>
-                  <Volume2 className="mr-2 h-4 w-4" />
-                  {globalMuted ? "Activar audio" : "Silenciar todo"}
-                </Button>
-                <Button variant="secondary" onClick={() => setGlobalPlayback("play")}>
-                  <Play className="mr-2 h-4 w-4" />
-                  Play global
-                </Button>
-                <Button variant="secondary" onClick={() => setGlobalPlayback("pause")}>
-                  <Pause className="mr-2 h-4 w-4" />
-                  Pausa global
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button variant="secondary" onClick={toggleGlobalMute}>
+                    <Volume2 className="mr-2 h-4 w-4" />
+                    {globalMuted ? "Activar audio" : "Silenciar todo"}
+                  </Button>
+                  <Button variant="secondary" onClick={() => setGlobalPlayback("play")}>
+                    <Play className="mr-2 h-4 w-4" />
+                    Play global
+                  </Button>
+                  <Button variant="secondary" onClick={() => setGlobalPlayback("pause")}>
+                    <Pause className="mr-2 h-4 w-4" />
+                    Pausa global
+                  </Button>
+                </div>
                 {user ? (
                   <SaveCombinationDialog layoutPayload={layoutPayload} />
                 ) : (
