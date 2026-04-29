@@ -21,6 +21,7 @@ Run these for most code changes:
 
 ## Targeted Validation
 
+- GitHub Actions workflow changes: run `npm run actions:lint`.
 - Docker/local onboarding: run `docker compose config`, build or start services as needed, and verify seeded local data only against local/dev databases.
 - Prisma schema changes: run migration checks and document production migration implications.
 - Vercel behavior: use PR preview checks for UI/runtime changes; use production smoke checks only after a release or incident fix.
