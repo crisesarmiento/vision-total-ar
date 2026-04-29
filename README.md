@@ -257,13 +257,14 @@ Config recomendada:
 - Workflow repo-side: `.github/workflows/project-mirror.yml`
 - Script: `.github/scripts/sync-project-status.mjs`
 - Secretos requeridos:
-  - `GH_PROJECT_TOKEN`: token con permisos para actualizar el GitHub Project y leer el repo
+  - `GH_PROJECT_TOKEN`: secret de Actions con permisos para actualizar el GitHub Project y leer el repo
   - `LINEAR_API_KEY`: opcional pero recomendado para reflejar el estado real de Linear cuando exista un `CRIS-###` en issue, PR o branch
 - El workflow:
   - agrega issues y PRs al GitHub Project `Vision Total AR - Project`
   - refleja `Todo`, `In Progress`, `In Review` y `Done`
   - usa estado de Linear cuando puede resolver el issue ID
   - si no puede, cae a una heurística segura basada en el estado del issue/PR en GitHub
+  - omite PRs desde forks cuando no hay secretos disponibles
 
 ### Estrategia de milestones
 - Los milestones de GitHub representan releases, no ciclos de Linear.

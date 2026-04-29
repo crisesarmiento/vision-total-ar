@@ -17,16 +17,25 @@ main().catch((error) => {
 async function main() {
   const projectWriteToken = process.env.GH_PROJECT_TOKEN;
   const githubReadToken = process.env.GITHUB_TOKEN || projectWriteToken;
-
-  if (!projectWriteToken) {
-    console.log("Skipping project sync because GH_PROJECT_TOKEN is not configured.");
-    return;
-  }
-
   const repository = process.env.GITHUB_REPOSITORY;
+  const eventName = process.env.GITHUB_EVENT_NAME;
+  const event = await readGitHubEvent();
 
   if (!repository?.includes("/")) {
     throw new Error("GITHUB_REPOSITORY is missing or invalid.");
+  }
+
+  if (!projectWriteToken) {
+    if (isForkPullRequest({ eventName, event, repository })) {
+      console.log(
+        "Skipping project sync for fork pull request because GH_PROJECT_TOKEN is unavailable.",
+      );
+      return;
+    }
+
+    throw new Error(
+      "GH_PROJECT_TOKEN is required to sync GitHub Project status. Configure it as a repository Actions secret with GitHub Projects write access.",
+    );
   }
 
   const [repoOwner, repoName] = repository.split("/");
@@ -42,6 +51,8 @@ async function main() {
     repoOwner,
     repoName,
     token: githubReadToken,
+    eventName,
+    event,
   });
 
   if (workItems.length === 0) {
@@ -87,10 +98,7 @@ async function main() {
   }
 }
 
-async function getWorkItems({ repoOwner, repoName, token }) {
-  const eventName = process.env.GITHUB_EVENT_NAME;
-  const event = await readGitHubEvent();
-
+async function getWorkItems({ repoOwner, repoName, token, eventName, event }) {
   if (eventName === "issues" && event?.issue) {
     return [normalizeIssue(event.issue)];
   }
@@ -116,6 +124,14 @@ async function getWorkItems({ repoOwner, repoName, token }) {
   const normalizedPullRequests = pullRequests.map(normalizePullRequest);
 
   return [...normalizedIssues, ...normalizedPullRequests];
+}
+
+function isForkPullRequest({ eventName, event, repository }) {
+  if (eventName !== "pull_request" || !event?.pull_request) {
+    return false;
+  }
+
+  return event.pull_request.head?.repo?.full_name !== repository;
 }
 
 async function readGitHubEvent() {
