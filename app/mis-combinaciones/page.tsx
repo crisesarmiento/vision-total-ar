@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { deleteCombination } from "@/actions/combinations";
+import { DeleteCombinationButton } from "@/components/combo/delete-combination-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,14 +55,14 @@ export default async function MyCombinationsPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-5xl px-4 py-10">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.35em] text-white/50">Biblioteca</p>
-          <h1 className="text-3xl font-semibold">Mis combinaciones</h1>
+          <h1 className="mt-2 text-3xl font-semibold leading-tight">Mis combinaciones</h1>
         </div>
-        <Link className="rounded-full border border-white/10 px-4 py-2 text-sm" href="/">
-          Volver al dashboard
-        </Link>
+        <Button asChild variant="outline">
+          <Link href="/">Volver al dashboard</Link>
+        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -78,12 +78,12 @@ export default async function MyCombinationsPage() {
               savedCombinations.map((combo) => (
                 <div
                   key={combo.id}
-                  className="rounded-[1.5rem] border border-white/10 bg-black/20 p-4"
+                  className="rounded-lg border border-white/10 bg-black/20 p-4"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div className="mb-2 flex items-center gap-2">
-                        <p className="font-medium">{combo.name}</p>
+                    <div className="min-w-0">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <p className="break-words font-medium">{combo.name}</p>
                         <Badge variant="secondary">
                           {combo.visibility === "PUBLIC" ? "Pública" : "Privada"}
                         </Badge>
@@ -92,20 +92,14 @@ export default async function MyCombinationsPage() {
                         {combo.description ?? "Sin descripción"}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button asChild variant="secondary">
                         <Link href={`/combo/${combo.publicSlug}`}>Ver</Link>
                       </Button>
-                      <form
-                        action={async () => {
-                          "use server";
-                          await deleteCombination(combo.id);
-                        }}
-                      >
-                        <Button type="submit" variant="outline">
-                          Eliminar
-                        </Button>
-                      </form>
+                      <DeleteCombinationButton
+                        combinationId={combo.id}
+                        combinationName={combo.name}
+                      />
                     </div>
                   </div>
                 </div>
@@ -129,7 +123,7 @@ export default async function MyCombinationsPage() {
                 <Link
                   key={item.id}
                   href={`/combo/${item.combination.publicSlug}`}
-                  className="block rounded-3xl border border-white/10 bg-black/20 px-4 py-3"
+                  className="block rounded-lg border border-white/10 bg-black/20 px-4 py-3 transition-colors hover:border-white/20 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <p className="font-medium">{item.combination.name}</p>
                   <p className="text-sm text-white/60">
