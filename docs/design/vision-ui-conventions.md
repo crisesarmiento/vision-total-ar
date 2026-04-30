@@ -37,6 +37,7 @@ This document captures the reusable UI conventions for Vision AR. It exists so d
 - Icon-only controls need accessible labels through visible text, `aria-label`, or nearby context.
 - Prefer existing Radix-backed primitives for dialogs, switches, labels, and future menu/tab interactions.
 - Add motion only when it clarifies state, ordering, loading, or responsiveness. Do not add ornamental motion.
+- Respect OS and Vision AR reduced-motion preferences. Disable continuous ticker or spatial movement while preserving static status affordances.
 
 ## Interaction States
 

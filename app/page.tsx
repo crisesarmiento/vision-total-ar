@@ -53,6 +53,8 @@ export default async function Home({
     {
       defaultGridPreset: StoredGridPreset;
       defaultLayoutJson: unknown;
+      reducedMotion: boolean;
+      tickerEnabled: boolean;
     } | null,
     { layoutJson: unknown } | null,
   ] = await Promise.all([
@@ -74,6 +76,8 @@ export default async function Home({
           select: {
             defaultGridPreset: true,
             defaultLayoutJson: true,
+            reducedMotion: true,
+            tickerEnabled: true,
           },
         })
       : Promise.resolve(null),
@@ -111,6 +115,8 @@ export default async function Home({
       initialPreset={fromStoredGridPreset(userPreference?.defaultGridPreset)}
       initialLayout={initialLayout}
       comboLayout={comboLayout}
+      reducedMotionEnabled={userPreference?.reducedMotion ?? false}
+      tickerEnabled={userPreference?.tickerEnabled ?? true}
     />
   );
 }

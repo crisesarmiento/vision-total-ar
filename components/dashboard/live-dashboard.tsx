@@ -70,6 +70,8 @@ type LiveDashboardProps = {
   initialPreset: LayoutPresetId;
   initialLayout: DashboardLayout | null;
   comboLayout?: DashboardLayout | null;
+  reducedMotionEnabled?: boolean;
+  tickerEnabled?: boolean;
 };
 
 class PollingRateLimitError extends Error {
@@ -97,6 +99,22 @@ function retryPollingQuery(failureCount: number, error: Error) {
   return !(error instanceof PollingRateLimitError) && failureCount < 3;
 }
 
+function usePrefersReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncPreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    syncPreference();
+    mediaQuery.addEventListener("change", syncPreference);
+
+    return () => mediaQuery.removeEventListener("change", syncPreference);
+  }, []);
+
+  return prefersReducedMotion;
+}
+
 export function LiveDashboard({
   user,
   featuredCombinations,
@@ -106,7 +124,11 @@ export function LiveDashboard({
   initialPreset,
   initialLayout,
   comboLayout,
+  reducedMotionEnabled = false,
+  tickerEnabled = true,
 }: LiveDashboardProps) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const shouldReduceMotion = reducedMotionEnabled || prefersReducedMotion;
   const sensors = useSensors(useSensor(PointerSensor));
   const [syncPlaybackSignal, setSyncPlaybackSignal] = useState<"play" | "pause" | null>(
     null,
@@ -152,6 +174,7 @@ export function LiveDashboard({
     queryKey: ["ticker-items"],
     initialData: initialTickerItems,
     queryFn: () => fetchPollingJson<TickerItem[]>("/api/ticker"),
+    enabled: tickerEnabled,
     refetchInterval: 300_000,
     retry: retryPollingQuery,
   });
@@ -400,7 +423,8 @@ export function LiveDashboard({
         ) : null}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-40 w-[320px] border-r border-white/10 bg-slate-950/95 p-4 backdrop-blur-xl transition-transform md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:translate-x-0 md:rounded-[2rem]",
+            "fixed inset-y-0 left-0 z-40 w-[320px] border-r border-white/10 bg-slate-950/95 p-4 backdrop-blur-xl md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:translate-x-0 md:rounded-[2rem]",
+            !reducedMotionEnabled && "motion-safe:transition-transform",
             sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           )}
           aria-label="Selector de señales"
@@ -604,7 +628,12 @@ export function LiveDashboard({
               ))}
             </div>
 
-            <NewsTicker items={tickerItems} />
+            {tickerEnabled ? (
+              <NewsTicker
+                items={tickerItems}
+                reducedMotionEnabled={shouldReduceMotion}
+              />
+            ) : null}
           </header>
 
           <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -627,6 +656,7 @@ export function LiveDashboard({
                           snapshot={liveSnapshots[player.channelId]}
                           active={focusedPlayerId === player.slotId}
                           syncPlaybackSignal={syncPlaybackSignal}
+                          reducedMotionEnabled={shouldReduceMotion}
                           onToggleMute={toggleMute}
                           onSetVolume={setVolume}
                           onFocus={focusPlayer}
