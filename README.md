@@ -44,6 +44,8 @@ La app queda disponible en `http://localhost:3000`.
 El contenedor usa PostgreSQL local con datos persistentes en un volumen Docker:
 - dentro de Compose: `db:5432`
 - desde el host: `localhost:5433`
+- el runtime de la app usa `DATABASE_DRIVER=pg`
+- dentro de Compose, `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` apuntan a `postgresql://vision_ar@db:5432/vision_total_ar`
 
 Usuario demo:
 - email: `demo@visionar.local`
@@ -76,6 +78,24 @@ cp .env.example .env
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL`
 - `NEXT_PUBLIC_APP_URL`
+
+Para desarrollo local contra PostgreSQL de Docker Compose desde el host, usá:
+
+```bash
+DATABASE_DRIVER=pg
+DATABASE_URL=postgresql://vision_ar@localhost:5433/vision_total_ar
+PRISMA_DIRECT_TCP_URL=
+```
+
+Si usás una base remota de Neon para desarrollo o preview, cambiá explícitamente a:
+
+```bash
+DATABASE_DRIVER=neon
+DATABASE_URL=<neon-runtime-url>
+PRISMA_DIRECT_TCP_URL=<neon-direct-url>
+```
+
+No mezcles `DATABASE_DRIVER=pg` con URLs remotas restringidas ni `DATABASE_DRIVER=neon` con el PostgreSQL local de Docker.
 
 4. Generar Prisma Client:
 
@@ -119,8 +139,8 @@ npm run dev
 
 ## Variables de entorno
 ```bash
-DATABASE_URL=
-DATABASE_DRIVER=neon
+DATABASE_DRIVER=pg
+DATABASE_URL=postgresql://vision_ar@localhost:5433/vision_total_ar
 PRISMA_DIRECT_TCP_URL=
 DATABASE_SEED_ALLOW_REMOTE=false
 SEED_DEMO_PASSWORD=
@@ -161,10 +181,12 @@ npm run prisma:studio
 ## Prisma y base de datos
 - El proyecto usa Prisma 7 con `prisma.config.ts`.
 - `DATABASE_URL` se usa para Prisma CLI y migraciones.
-- El runtime usa `PrismaClient` con `DATABASE_DRIVER=neon` por defecto y `DATABASE_DRIVER=pg` para PostgreSQL local en Docker Compose.
+- El runtime usa `PrismaClient` con `DATABASE_DRIVER=pg` para PostgreSQL local y `DATABASE_DRIVER=neon` para Neon.
+- Con `DATABASE_DRIVER=pg`, el runtime prefiere `DATABASE_URL` y usa `PRISMA_DIRECT_TCP_URL` solo como fallback.
+- Con `DATABASE_DRIVER=neon`, el runtime prefiere `PRISMA_DIRECT_TCP_URL` y usa `DATABASE_URL` como fallback para mantener compatibilidad con el cutover.
 - Producción debe usar `npm run prisma:migrate:deploy`; no usar `db:push`, `prisma migrate dev` ni `db:seed` contra production.
 - El workflow manual `.github/workflows/production-db-migrations.yml` ejecuta `status` o `deploy` con el secret protegido `PRODUCTION_DATABASE_URL` del environment `Production`.
-- Durante el cutover, el runtime prioriza `PRISMA_DIRECT_TCP_URL` para permitir una migración escalonada sin romper producción si `DATABASE_URL` todavía apunta al proveedor anterior.
+- Durante el cutover con `DATABASE_DRIVER=neon`, el runtime prioriza `PRISMA_DIRECT_TCP_URL` para permitir una migración escalonada sin romper producción si `DATABASE_URL` todavía apunta al proveedor anterior.
 - Una vez completada la migración, la configuración objetivo es que `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` apunten ambas a Neon, y luego se puede simplificar el fallback legacy en un follow-up.
 
 ## Migración de Prisma Postgres a Neon

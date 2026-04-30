@@ -4,6 +4,13 @@ import { PrismaClient } from "@prisma/client";
 
 export type DatabaseDriver = "neon" | "pg";
 
+type PrismaEnv = {
+  [key: string]: string | undefined;
+  DATABASE_DRIVER?: string;
+  DATABASE_URL?: string;
+  PRISMA_DIRECT_TCP_URL?: string;
+};
+
 export function resolveDatabaseDriver(
   value = process.env.DATABASE_DRIVER,
 ): DatabaseDriver {
@@ -20,9 +27,18 @@ export function resolveDatabaseDriver(
   );
 }
 
-export function getConnectionString() {
+function configuredValue(value: string | undefined) {
+  return value?.trim() || undefined;
+}
+
+export function resolvePrismaConnectionConfig(env: PrismaEnv = process.env) {
+  const driver = resolveDatabaseDriver(env.DATABASE_DRIVER);
   const connectionString =
-    process.env.PRISMA_DIRECT_TCP_URL ?? process.env.DATABASE_URL;
+    driver === "pg"
+      ? configuredValue(env.DATABASE_URL) ??
+        configuredValue(env.PRISMA_DIRECT_TCP_URL)
+      : configuredValue(env.PRISMA_DIRECT_TCP_URL) ??
+        configuredValue(env.DATABASE_URL);
 
   if (!connectionString) {
     throw new Error(
@@ -30,14 +46,27 @@ export function getConnectionString() {
     );
   }
 
-  process.env.DATABASE_URL = connectionString;
+  return {
+    driver,
+    connectionString,
+  };
+}
+
+export function getConnectionString(env: PrismaEnv = process.env) {
+  const connectionString =
+    resolvePrismaConnectionConfig(env).connectionString;
+
+  if (env === process.env) {
+    process.env.DATABASE_URL = connectionString;
+  }
 
   return connectionString;
 }
 
 export function createPrismaClient() {
-  const connectionString = getConnectionString();
-  const driver = resolveDatabaseDriver();
+  const { connectionString, driver } = resolvePrismaConnectionConfig();
+  process.env.DATABASE_URL = connectionString;
+
   const adapter =
     driver === "pg"
       ? new PrismaPg(connectionString)
