@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SettingsForm } from "@/components/profile/settings-form";
+import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
@@ -15,14 +16,14 @@ export default async function SettingsPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-4 py-10">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.35em] text-white/50">Preferencias</p>
-          <h1 className="text-3xl font-semibold">Configuración personal</h1>
+          <h1 className="mt-2 text-3xl font-semibold leading-tight">Configuración personal</h1>
         </div>
-        <Link className="rounded-full border border-white/10 px-4 py-2 text-sm" href="/">
-          Volver al dashboard
-        </Link>
+        <Button asChild variant="outline">
+          <Link href="/">Volver al dashboard</Link>
+        </Button>
       </div>
 
       <SettingsForm

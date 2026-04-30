@@ -86,7 +86,7 @@ export function AuthPanel({ mode }: AuthPanelProps) {
   };
 
   return (
-    <Card className="mx-auto w-full max-w-xl">
+    <Card className="mx-auto max-w-xl" style={{ width: "calc(100vw - 2rem)" }}>
       <CardHeader>
         <CardTitle>{isSignUp ? "Crear cuenta" : "Ingresar"}</CardTitle>
         <CardDescription>
@@ -121,14 +121,25 @@ export function AuthPanel({ mode }: AuthPanelProps) {
           />
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
-          <Button onClick={submit} disabled={isPending}>
+          <Button type="button" onClick={submit} disabled={isPending}>
             {isPending ? "Procesando..." : isSignUp ? "Crear cuenta" : "Ingresar"}
           </Button>
-          <Button variant="secondary" onClick={sendMagicLink} disabled={isPending || !email}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={sendMagicLink}
+            disabled={isPending || !email}
+          >
             Enviar magic link
           </Button>
         </div>
-        <Button variant="outline" className="w-full" onClick={signInWithGoogle} disabled={isPending}>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={signInWithGoogle}
+          disabled={isPending}
+        >
           Continuar con Google
         </Button>
         <p className="text-sm text-white/60">
