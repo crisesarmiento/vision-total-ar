@@ -16,6 +16,9 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - Use `prisma migrate deploy` for production database migrations.
 - Keep Docker Compose local-dev only unless a ticket explicitly changes deployment.
 - Do not paste provider secrets, connection strings, private dashboard URLs, or account-specific paths into public files.
+- For local dashboard development, pair `DATABASE_DRIVER=pg` with the Docker
+  PostgreSQL URL. Use `DATABASE_DRIVER=neon` only with Neon runtime/direct URLs,
+  and document names or placeholder shapes rather than real values.
 
 ## Common Checks
 
