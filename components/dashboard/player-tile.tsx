@@ -28,6 +28,7 @@ type PlayerTileProps = {
   snapshot?: LiveChannelSnapshot;
   active: boolean;
   syncPlaybackSignal: "play" | "pause" | null;
+  reducedMotionEnabled?: boolean;
   onToggleMute: (slotId: string) => void;
   onSetVolume: (slotId: string, volume: number) => void;
   onFocus: (slotId: string) => void;
@@ -54,6 +55,7 @@ export function PlayerTile({
   snapshot,
   active,
   syncPlaybackSignal,
+  reducedMotionEnabled = false,
   onToggleMute,
   onSetVolume,
   onFocus,
@@ -122,9 +124,9 @@ export function PlayerTile({
   const style = useMemo(
     () => ({
       transform: CSS.Transform.toString(transform),
-      transition,
+      transition: reducedMotionEnabled ? "none" : transition,
     }),
-    [transform, transition],
+    [reducedMotionEnabled, transform, transition],
   );
 
   const toggleFullscreen = async () => {
