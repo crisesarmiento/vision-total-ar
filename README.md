@@ -88,6 +88,12 @@ DATABASE_URL=postgresql://vision_ar@localhost:5433/vision_total_ar
 PRISMA_DIRECT_TCP_URL=
 ```
 
+Podés validar que la combinación sea segura antes de arrancar la app:
+
+```bash
+npm run env:doctor
+```
+
 Si usás una base remota de Neon para desarrollo o preview, cambiá explícitamente a:
 
 ```bash
@@ -97,6 +103,7 @@ PRISMA_DIRECT_TCP_URL=<neon-direct-url>
 ```
 
 No mezcles `DATABASE_DRIVER=pg` con URLs remotas restringidas ni `DATABASE_DRIVER=neon` con el PostgreSQL local de Docker.
+Si tu `.env` todavía tiene hosts `db.prisma.io`, reemplazalos: pertenecen al proveedor anterior y el runtime local falla rápido para que el dashboard no quede bloqueado por una URL obsoleta.
 
 4. Generar Prisma Client:
 
@@ -163,6 +170,7 @@ UPLOADTHING_APP_ID=
 npm run dev
 npm run lint
 npm run actions:lint
+npm run env:doctor
 npm run typecheck
 npm run test
 npm run build
@@ -183,8 +191,11 @@ npm run prisma:studio
 - El proyecto usa Prisma 7 con `prisma.config.ts`.
 - `DATABASE_URL` se usa para Prisma CLI y migraciones.
 - El runtime usa `PrismaClient` con `DATABASE_DRIVER=pg` para PostgreSQL local y `DATABASE_DRIVER=neon` para Neon.
+- En `development`, `DATABASE_DRIVER` debe estar configurado explícitamente. Esto evita que un `.env` privado obsoleto elija el adaptador equivocado.
 - Con `DATABASE_DRIVER=pg`, el runtime prefiere `DATABASE_URL` y usa `PRISMA_DIRECT_TCP_URL` solo como fallback.
 - Con `DATABASE_DRIVER=neon`, el runtime prefiere `PRISMA_DIRECT_TCP_URL` y usa `DATABASE_URL` como fallback para mantener compatibilidad con el cutover.
+- `npm run env:doctor` muestra solo metadatos públicos de la configuración local, como driver, host, puerto y si la URL es local o remota. No imprime credenciales ni URLs completas.
+- Las URLs con host `db.prisma.io` se rechazan en runtime porque pertenecen a Prisma Postgres, el proveedor anterior. Usá PostgreSQL local con `DATABASE_DRIVER=pg` o URLs de Neon con `DATABASE_DRIVER=neon`.
 - Producción debe usar `npm run prisma:migrate:deploy`; no usar `db:push`, `prisma migrate dev` ni `db:seed` contra production.
 - El workflow manual `.github/workflows/production-db-migrations.yml` ejecuta `status` o `deploy` con el secret protegido `PRODUCTION_DATABASE_URL` del environment `Production`.
 - Durante el cutover con `DATABASE_DRIVER=neon`, el runtime prioriza `PRISMA_DIRECT_TCP_URL` para permitir una migración escalonada sin romper producción si `DATABASE_URL` todavía apunta al proveedor anterior.

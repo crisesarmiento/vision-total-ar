@@ -9,6 +9,7 @@
     "postinstall": "prisma generate",
     "lint": "eslint .",
     "actions:lint": "node-actionlint",
+    "env:doctor": "tsx scripts/env-doctor.ts",
     "skills:validate": "node scripts/validate-skills.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

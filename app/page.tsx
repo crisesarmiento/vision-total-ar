@@ -1,5 +1,8 @@
 import { LiveDashboard } from "@/components/dashboard/live-dashboard";
-import { parseDashboardLayout } from "@/lib/dashboard-layout";
+import {
+  decodeDashboardLayoutShareParam,
+  parseDashboardLayout,
+} from "@/lib/dashboard-layout";
 import { fromStoredGridPreset, type StoredGridPreset } from "@/lib/layout-presets";
 import { prisma } from "@/lib/prisma";
 import { getTickerItems } from "@/lib/rss";
@@ -19,9 +22,9 @@ type FeaturedCombination = {
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ combo?: string }>;
+  searchParams: Promise<{ combo?: string; layout?: string }>;
 }) {
-  const [{ combo }, session, featuredCombinations, liveSnapshots, tickerItems]: [
+  const [{ combo, layout }, session, featuredCombinations, liveSnapshots, tickerItems]: [
     Awaited<typeof searchParams>,
     Awaited<ReturnType<typeof getSession>>,
     FeaturedCombination[],
@@ -56,7 +59,7 @@ export default async function Home({
       reducedMotion: boolean;
       tickerEnabled: boolean;
     } | null,
-    { layoutJson: unknown } | null,
+    { publicSlug: string; layoutJson: unknown } | null,
   ] = await Promise.all([
     session
       ? prisma.favoriteChannel.findMany({
@@ -88,6 +91,7 @@ export default async function Home({
             visibility: "PUBLIC",
           },
           select: {
+            publicSlug: true,
             layoutJson: true,
           },
         })
@@ -96,6 +100,15 @@ export default async function Home({
 
   const initialLayout = parseDashboardLayout(userPreference?.defaultLayoutJson ?? null);
   const comboLayout = parseDashboardLayout(selectedCombination?.layoutJson ?? null);
+  const sharedLayout = comboLayout ? null : decodeDashboardLayoutShareParam(layout);
+  const routeLayout = comboLayout ?? sharedLayout;
+  const canonicalShare =
+    selectedCombination && comboLayout
+      ? {
+          publicSlug: selectedCombination.publicSlug,
+          layout: comboLayout,
+        }
+      : null;
 
   const user = session
     ? {
@@ -114,7 +127,8 @@ export default async function Home({
       initialTickerItems={tickerItems}
       initialPreset={fromStoredGridPreset(userPreference?.defaultGridPreset)}
       initialLayout={initialLayout}
-      comboLayout={comboLayout}
+      comboLayout={routeLayout}
+      canonicalShare={canonicalShare}
       reducedMotionEnabled={userPreference?.reducedMotion ?? false}
       tickerEnabled={userPreference?.tickerEnabled ?? true}
     />

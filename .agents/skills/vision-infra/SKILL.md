@@ -19,6 +19,9 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - For local dashboard development, pair `DATABASE_DRIVER=pg` with the Docker
   PostgreSQL URL. Use `DATABASE_DRIVER=neon` only with Neon runtime/direct URLs,
   and document names or placeholder shapes rather than real values.
+- Run `npm run env:doctor` when local dashboard runtime fails before rendering;
+  it reports only public-safe driver and URL metadata and flags stale
+  `db.prisma.io` Prisma Postgres values.
 
 ## Common Checks
 
