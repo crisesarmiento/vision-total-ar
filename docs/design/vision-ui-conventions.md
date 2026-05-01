@@ -2,6 +2,8 @@
 
 This document captures the reusable UI conventions for Vision AR. It exists so design changes stay consistent across the dashboard, public combo pages, saved-combo library, auth, profile, settings, and shared UI primitives.
 
+Use `docs/design/visual-qa-checklist.md` when reviewing or handing off design changes. The checklist translates these conventions into repeatable route, viewport, state, accessibility, reduced-motion, and PR-evidence checks.
+
 ## Product Direction
 
 - Vision AR is a dark, monitoring-focused multiview product for Argentine news channels.
@@ -102,4 +104,4 @@ For design changes, run the validation path appropriate to the touched files:
 - `npm run build`
 - `npm run skills:validate` when `.agents/skills`, `docs/skills`, `scripts/validate-skills.mjs`, or `AGENTS.md` changes
 
-Also perform responsive visual QA for the surfaces listed above. Check keyboard focus, mobile sidebar behavior, player controls, save-combo dialog behavior, empty states, and long Spanish text wrapping.
+Also perform responsive visual QA for the surfaces listed above using `docs/design/visual-qa-checklist.md`. Check keyboard focus, mobile sidebar behavior, player controls, save-combo dialog behavior, empty states, reduced-motion behavior, disabled and pending states, and long Spanish text wrapping.

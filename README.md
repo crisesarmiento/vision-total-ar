@@ -28,6 +28,7 @@ Vision AR es una plataforma premium de multiview para seguir todas las visiones 
 
 ## Diseño
 - Convenciones de UI: [docs/design/vision-ui-conventions.md](docs/design/vision-ui-conventions.md)
+- Checklist de QA visual: [docs/design/visual-qa-checklist.md](docs/design/visual-qa-checklist.md)
 - Investigación de diseño asistido por IA: [docs/design/ai-design-research.md](docs/design/ai-design-research.md)
 - Desglose de tickets de Milestone 7: [docs/design/milestone-7-child-tickets.md](docs/design/milestone-7-child-tickets.md)
 
