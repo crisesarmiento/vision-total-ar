@@ -16,6 +16,7 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - Keep Spanish product copy consistent with the app.
 - Avoid generic redesigns or unrelated visual drift.
 - Use `docs/design/vision-ui-conventions.md` as the durable source for reusable UI conventions.
+- Use `docs/design/visual-qa-checklist.md` as the repeatable review checklist for design PRs and handoffs.
 - Treat the dashboard grid as the primary product surface. Supporting chrome should help users compare live signals without competing with the players.
 
 ## Implementation Notes
@@ -27,6 +28,7 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - Preserve the dark-first monitoring palette: near-black surfaces, translucent borders, red primary/live/focus treatment, neutral text, and small channel accents.
 - Keep cards, glass panels, overlays, dialogs, and page sections consistent with the conventions doc. Avoid nested cards and decorative redesigns.
 - Validate responsive behavior, keyboard focus, long Spanish text wrapping, disabled/pending states, and accessible names for interactive controls.
+- Capture visual QA evidence in PR notes: routes and viewports checked, validation commands, skipped checks with reasons, and only public-safe screenshots or references.
 - For AI-assisted design research, keep work documentation-first unless a separate implementation ticket authorizes API integration, user data flow, billing, and production validation.
 
 Document design decisions in the PR when a change affects reusable patterns or user workflow.
