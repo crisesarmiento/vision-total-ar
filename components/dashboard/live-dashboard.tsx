@@ -35,11 +35,13 @@ import { saveLayoutPreference as persistLayoutPreference } from "@/actions/user"
 import { NewsTicker } from "@/components/dashboard/news-ticker";
 import { PlayerTile } from "@/components/dashboard/player-tile";
 import { SaveCombinationDialog } from "@/components/dashboard/save-combination-dialog";
+import { ShareDashboardButton } from "@/components/dashboard/share-dashboard-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { DashboardLayout } from "@/lib/dashboard-layout";
+import type { CanonicalDashboardShare } from "@/lib/dashboard-share";
 import { channels, getChannelById } from "@/lib/channels";
 import { GRID_PRESETS, getPresetById, type LayoutPresetId } from "@/lib/layout-presets";
 import type { TickerItem } from "@/lib/rss";
@@ -70,6 +72,7 @@ type LiveDashboardProps = {
   initialPreset: LayoutPresetId;
   initialLayout: DashboardLayout | null;
   comboLayout?: DashboardLayout | null;
+  canonicalShare?: CanonicalDashboardShare | null;
   reducedMotionEnabled?: boolean;
   tickerEnabled?: boolean;
 };
@@ -124,6 +127,7 @@ export function LiveDashboard({
   initialPreset,
   initialLayout,
   comboLayout,
+  canonicalShare,
   reducedMotionEnabled = false,
   tickerEnabled = true,
 }: LiveDashboardProps) {
@@ -216,12 +220,7 @@ export function LiveDashboard({
     }
 
     if (comboLayout) {
-      setPreset(comboLayout.preset);
-      comboLayout.players.forEach((player) => {
-        if (getChannelById(player.channelId)) {
-          setChannel(player.slotId, player.channelId);
-        }
-      });
+      hydrateLayout(comboLayout);
     } else if (initialLayout) {
       hydrateLayout(initialLayout);
       lastSavedLayout.current = JSON.stringify(initialLayout);
@@ -232,7 +231,7 @@ export function LiveDashboard({
     }
 
     hasAppliedInitialLayout.current = true;
-  }, [comboLayout, hydrateLayout, initialLayout, initialPreset, layoutPreset, setChannel, setPreset]);
+  }, [comboLayout, hydrateLayout, initialLayout, initialPreset, layoutPreset, setPreset]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -612,6 +611,10 @@ export function LiveDashboard({
                     <Link href="/ingresar">Ingresar para guardar</Link>
                   </Button>
                 )}
+                <ShareDashboardButton
+                  layoutPayload={layoutPayload}
+                  canonicalShare={canonicalShare}
+                />
               </div>
             </div>
 
