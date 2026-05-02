@@ -40,6 +40,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  filterSidebarChannels,
+  SIDEBAR_CHANNEL_FILTERS,
+  type SidebarChannelFilter,
+} from "@/lib/channel-filters";
 import type { DashboardLayout } from "@/lib/dashboard-layout";
 import type { CanonicalDashboardShare } from "@/lib/dashboard-share";
 import { channels, getChannelById } from "@/lib/channels";
@@ -139,6 +144,7 @@ export function LiveDashboard({
   );
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [sidebarFilter, setSidebarFilter] = useState<SidebarChannelFilter>("all");
   const [favoriteIds, setFavoriteIds] = useState(favoriteChannelIds);
   const [isPending, startTransition] = useTransition();
   const hasAppliedInitialLayout = useRef(false);
@@ -196,23 +202,43 @@ export function LiveDashboard({
     [layoutPreset, visiblePlayers],
   );
 
-  const filteredChannels = useMemo(() => {
-    const normalizedSearch = search.toLowerCase();
-    return channels
-      .filter((channel) =>
-        `${channel.name} ${channel.description}`.toLowerCase().includes(normalizedSearch),
-      )
-      .sort((left, right) => {
-        const leftFavorite = favoriteIds.includes(left.id);
-        const rightFavorite = favoriteIds.includes(right.id);
+  const filteredChannels = useMemo(
+    () =>
+      filterSidebarChannels({
+        channels,
+        favoriteIds,
+        filter: sidebarFilter,
+        liveSnapshots,
+        search,
+      }),
+    [favoriteIds, liveSnapshots, search, sidebarFilter],
+  );
 
-        if (leftFavorite === rightFavorite) {
-          return 0;
-        }
+  const channelListEmptyMessage = useMemo(() => {
+    const hasSearch = Boolean(search.trim());
 
-        return leftFavorite ? -1 : 1;
-      });
-  }, [favoriteIds, search]);
+    if (sidebarFilter === "favorites") {
+      if (hasSearch) {
+        return "No hay favoritos que coincidan con esa búsqueda.";
+      }
+
+      return user
+        ? "Todavía no marcaste señales como favoritas."
+        : "Ingresá para guardar favoritos y verlos acá.";
+    }
+
+    if (sidebarFilter === "live") {
+      return hasSearch
+        ? "No hay señales en vivo que coincidan con esa búsqueda."
+        : "No detectamos señales en vivo con este filtro.";
+    }
+
+    if (hasSearch) {
+      return "No hay señales que coincidan con esa búsqueda.";
+    }
+
+    return "No hay señales disponibles para este filtro.";
+  }, [search, sidebarFilter, user]);
 
   useEffect(() => {
     if (hasAppliedInitialLayout.current) {
@@ -463,64 +489,89 @@ export function LiveDashboard({
                   placeholder="Buscar canal o streamer"
                   aria-label="Buscar canal o streamer"
                 />
+                <div
+                  className="flex flex-wrap gap-2"
+                  role="group"
+                  aria-label="Filtros rápidos de señales"
+                >
+                  {SIDEBAR_CHANNEL_FILTERS.map((filter) => (
+                    <Button
+                      key={filter.value}
+                      type="button"
+                      size="sm"
+                      variant={sidebarFilter === filter.value ? "default" : "secondary"}
+                      className="h-8 px-3 text-xs"
+                      onClick={() => setSidebarFilter(filter.value)}
+                      aria-pressed={sidebarFilter === filter.value}
+                    >
+                      {filter.label}
+                    </Button>
+                  ))}
+                </div>
                 <div className="max-h-[420px] space-y-2 overflow-auto pr-1">
-                  {filteredChannels.map((channel) => {
-                    const isFavorite = favoriteIds.includes(channel.id);
-                    const isLive = liveSnapshots[channel.id]?.isLive;
+                  {filteredChannels.length ? (
+                    filteredChannels.map((channel) => {
+                      const isFavorite = favoriteIds.includes(channel.id);
+                      const isLive = liveSnapshots[channel.id]?.isLive;
 
-                    return (
-                      <div
-                        key={channel.id}
-                        className="flex items-start justify-between gap-3 rounded-3xl border border-white/10 bg-black/20 px-4 py-3 transition hover:border-primary/40 hover:bg-white/5"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => assignChannel(channel.id)}
-                          className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      return (
+                        <div
+                          key={channel.id}
+                          className="flex items-start justify-between gap-3 rounded-3xl border border-white/10 bg-black/20 px-4 py-3 transition hover:border-primary/40 hover:bg-white/5"
                         >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-medium">{channel.shortName}</span>
-                            {isLive ? (
-                              <span
-                                aria-hidden="true"
-                                className="h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]"
-                              />
-                            ) : null}
-                            {channel.isIndependent ? (
-                              <Badge variant="secondary">Independiente</Badge>
-                            ) : null}
-                          </div>
-                          <p className="line-clamp-2 text-sm text-white/70">
-                            {channel.description}
-                          </p>
-                        </button>
-                        <button
-                          type="button"
-                          className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          onClick={() => toggleFavorite(channel.id)}
-                          disabled={isPending}
-                          aria-label={
-                            isFavorite
-                              ? `Quitar ${channel.name} de favoritos`
-                              : `Agregar ${channel.name} a favoritos`
-                          }
-                          aria-pressed={isFavorite}
-                          title={
-                            isFavorite
-                              ? `Quitar ${channel.name} de favoritos`
-                              : `Agregar ${channel.name} a favoritos`
-                          }
-                        >
-                          <Star
-                            className={cn(
-                              "h-4 w-4",
-                              isFavorite && "fill-current text-amber-300",
-                            )}
-                          />
-                        </button>
-                      </div>
-                    );
-                  })}
+                          <button
+                            type="button"
+                            onClick={() => assignChannel(channel.id)}
+                            className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="font-medium">{channel.shortName}</span>
+                              {isLive ? (
+                                <span
+                                  aria-hidden="true"
+                                  className="h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]"
+                                />
+                              ) : null}
+                              {channel.isIndependent ? (
+                                <Badge variant="secondary">Independiente</Badge>
+                              ) : null}
+                            </div>
+                            <p className="line-clamp-2 text-sm text-white/70">
+                              {channel.description}
+                            </p>
+                          </button>
+                          <button
+                            type="button"
+                            className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            onClick={() => toggleFavorite(channel.id)}
+                            disabled={isPending}
+                            aria-label={
+                              isFavorite
+                                ? `Quitar ${channel.name} de favoritos`
+                                : `Agregar ${channel.name} a favoritos`
+                            }
+                            aria-pressed={isFavorite}
+                            title={
+                              isFavorite
+                                ? `Quitar ${channel.name} de favoritos`
+                                : `Agregar ${channel.name} a favoritos`
+                            }
+                          >
+                            <Star
+                              className={cn(
+                                "h-4 w-4",
+                                isFavorite && "fill-current text-amber-300",
+                              )}
+                            />
+                          </button>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="rounded-3xl border border-white/10 bg-black/20 px-4 py-5 text-sm text-white/65">
+                      {channelListEmptyMessage}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
