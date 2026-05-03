@@ -47,7 +47,7 @@ function makeCombo(overrides: Partial<ComboCandidate> & { layoutChannelIds?: str
     updatedAt: FAKE_NOW,
     layoutJson: {
       preset: "2x1",
-      players: layoutChannelIds.map((channelId, i) => ({
+      players: layoutChannelIds.map((channelId: string, i: number) => ({
         slotId: `s${i}`,
         channelId,
         muted: true,
