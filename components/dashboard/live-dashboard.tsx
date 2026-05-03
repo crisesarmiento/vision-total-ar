@@ -32,6 +32,7 @@ import {
   trackChannelView,
 } from "@/actions/combinations";
 import { saveLayoutPreference as persistLayoutPreference } from "@/actions/user";
+import { HomeLiveNowSection } from "@/components/dashboard/home-live-now-section";
 import { NewsTicker } from "@/components/dashboard/news-ticker";
 import { PlayerTile } from "@/components/dashboard/player-tile";
 import { SaveCombinationDialog } from "@/components/dashboard/save-combination-dialog";
@@ -46,6 +47,7 @@ import {
   type SidebarChannelFilter,
 } from "@/lib/channel-filters";
 import type { DashboardLayout } from "@/lib/dashboard-layout";
+import type { RankedChannel, RankedCombo } from "@/lib/home/live-now";
 import type { CanonicalDashboardShare } from "@/lib/dashboard-share";
 import { channels, getChannelById } from "@/lib/channels";
 import { GRID_PRESETS, getPresetById, type LayoutPresetId } from "@/lib/layout-presets";
@@ -80,6 +82,8 @@ type LiveDashboardProps = {
   canonicalShare?: CanonicalDashboardShare | null;
   reducedMotionEnabled?: boolean;
   tickerEnabled?: boolean;
+  liveNowChannels: RankedChannel[];
+  liveNowCombos: RankedCombo[];
 };
 
 class PollingRateLimitError extends Error {
@@ -135,6 +139,8 @@ export function LiveDashboard({
   canonicalShare,
   reducedMotionEnabled = false,
   tickerEnabled = true,
+  liveNowChannels,
+  liveNowCombos,
 }: LiveDashboardProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const shouldReduceMotion = reducedMotionEnabled || prefersReducedMotion;
@@ -729,6 +735,11 @@ export function LiveDashboard({
             </div>
 
             <div className="space-y-4">
+              <HomeLiveNowSection
+                liveChannels={liveNowChannels}
+                liveNowCombos={liveNowCombos}
+                user={user}
+              />
               <Card className="border-white/10 bg-white/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
