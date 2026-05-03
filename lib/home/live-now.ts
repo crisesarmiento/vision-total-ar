@@ -76,27 +76,28 @@ export function rankRelevantCombos(
   liveChannelIdSet: Set<string>,
   now: Date = new Date(),
 ): RankedCombo[] {
-  const scored = combos.map((combo) => {
-    const layout = parseDashboardLayout(combo.layoutJson);
-    const channelIds = layout?.players.map((p) => p.channelId) ?? [];
-    const liveChannelCount = channelIds.filter((id) => liveChannelIdSet.has(id)).length;
-    const totalChannelCount = channelIds.length;
-    return {
-      id: combo.id,
-      publicSlug: combo.publicSlug,
-      name: combo.name,
-      description: combo.description,
-      favoritesCount: combo.favoritesCount,
-      liveChannelCount,
-      totalChannelCount,
-      _score: scoreCombo(
-        { liveChannelCount, favoritesCount: combo.favoritesCount, updatedAt: combo.updatedAt },
-        now,
-      ),
-    };
-  });
-
-  return scored
-    .sort((a, b) => b._score - a._score)
-    .map(({ _score: _, ...rest }) => rest);
+  return combos
+    .map((combo) => {
+      const layout = parseDashboardLayout(combo.layoutJson);
+      const channelIds = layout?.players.map((p) => p.channelId) ?? [];
+      const liveChannelCount = channelIds.filter((id) => liveChannelIdSet.has(id)).length;
+      const totalChannelCount = channelIds.length;
+      return {
+        ranked: {
+          id: combo.id,
+          publicSlug: combo.publicSlug,
+          name: combo.name,
+          description: combo.description,
+          favoritesCount: combo.favoritesCount,
+          liveChannelCount,
+          totalChannelCount,
+        } satisfies RankedCombo,
+        score: scoreCombo(
+          { liveChannelCount, favoritesCount: combo.favoritesCount, updatedAt: combo.updatedAt },
+          now,
+        ),
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .map((item) => item.ranked);
 }
