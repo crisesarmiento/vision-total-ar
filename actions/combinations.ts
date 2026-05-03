@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { buildForkPayload } from "@/lib/combination-fork";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 
@@ -41,6 +42,42 @@ export async function saveCombination(input: z.infer<typeof combinationSchema>) 
   revalidatePath(`/combo/${combination.publicSlug}`);
 
   return combination;
+}
+
+export async function forkPublicCombination(sourceId: string) {
+  const session = await requireSession();
+
+  const source = await prisma.savedCombination.findFirst({
+    where: {
+      id: sourceId,
+      visibility: "PUBLIC",
+    },
+    select: {
+      id: true,
+      publicSlug: true,
+      name: true,
+      description: true,
+      layoutJson: true,
+    },
+  });
+
+  if (!source) {
+    throw new Error("No encontramos esa combinación pública.");
+  }
+
+  const fork = await prisma.savedCombination.create({
+    data: buildForkPayload(source, session.user.id),
+    select: {
+      id: true,
+      publicSlug: true,
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/mis-combinaciones");
+  revalidatePath(`/combo/${source.publicSlug}`);
+
+  return fork;
 }
 
 export async function deleteCombination(id: string) {
