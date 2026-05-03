@@ -8,6 +8,13 @@ import { prisma } from "@/lib/prisma";
 import { getTickerItems } from "@/lib/rss";
 import { getSession } from "@/lib/session";
 import { getLiveSnapshots } from "@/lib/youtube";
+import { channels } from "@/lib/channels";
+import {
+  rankLiveChannels,
+  rankRelevantCombos,
+  type RankedChannel,
+  type RankedCombo,
+} from "@/lib/home/live-now";
 
 export const dynamic = "force-dynamic";
 
@@ -19,36 +26,53 @@ type FeaturedCombination = {
   favoritesCount: number;
 };
 
+type LiveNowComboCandidate = {
+  id: string;
+  publicSlug: string;
+  name: string;
+  description: string | null;
+  favoritesCount: number;
+  layoutJson: unknown;
+  updatedAt: Date;
+};
+
 export default async function Home({
   searchParams,
 }: {
   searchParams: Promise<{ combo?: string; layout?: string }>;
 }) {
-  const [{ combo, layout }, session, featuredCombinations, liveSnapshots, tickerItems]: [
+  const [{ combo, layout }, session, featuredCombinations, liveSnapshots, tickerItems, liveNowComboCandidates]: [
     Awaited<typeof searchParams>,
     Awaited<ReturnType<typeof getSession>>,
     FeaturedCombination[],
     Awaited<ReturnType<typeof getLiveSnapshots>>,
     Awaited<ReturnType<typeof getTickerItems>>,
+    LiveNowComboCandidate[],
   ] = await Promise.all([
     searchParams,
     getSession(),
     prisma.savedCombination.findMany({
-      where: {
-        visibility: "PUBLIC",
-      },
+      where: { visibility: "PUBLIC" },
       orderBy: [{ favoritesCount: "desc" }, { updatedAt: "desc" }],
       take: 4,
+      select: { id: true, publicSlug: true, name: true, description: true, favoritesCount: true },
+    }),
+    getLiveSnapshots(),
+    getTickerItems(),
+    prisma.savedCombination.findMany({
+      where: { visibility: "PUBLIC" },
+      orderBy: [{ favoritesCount: "desc" }, { updatedAt: "desc" }],
+      take: 20,
       select: {
         id: true,
         publicSlug: true,
         name: true,
         description: true,
         favoritesCount: true,
+        layoutJson: true,
+        updatedAt: true,
       },
     }),
-    getLiveSnapshots(),
-    getTickerItems(),
   ]);
 
   const [favoriteChannels, userPreference, selectedCombination]: [
@@ -118,6 +142,14 @@ export default async function Home({
       }
     : null;
 
+  const liveChannelIdSet = new Set(
+    Object.entries(liveSnapshots)
+      .filter(([, snap]) => snap.isLive)
+      .map(([id]) => id),
+  );
+  const liveNowChannels: RankedChannel[] = rankLiveChannels(channels, liveSnapshots).slice(0, 6);
+  const liveNowCombos: RankedCombo[] = rankRelevantCombos(liveNowComboCandidates, liveChannelIdSet).slice(0, 4);
+
   return (
     <LiveDashboard
       user={user}
@@ -131,6 +163,8 @@ export default async function Home({
       canonicalShare={canonicalShare}
       reducedMotionEnabled={userPreference?.reducedMotion ?? false}
       tickerEnabled={userPreference?.tickerEnabled ?? true}
+      liveNowChannels={liveNowChannels}
+      liveNowCombos={liveNowCombos}
     />
   );
 }
