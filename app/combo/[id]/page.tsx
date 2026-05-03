@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CopyLinkButton } from "@/components/combo/copy-link-button";
 import { FavoriteCombinationButton } from "@/components/combo/favorite-combination-button";
+import { ForkCombinationButton } from "@/components/combo/fork-combination-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,6 +92,7 @@ export default async function PublicCombinationPage({
           <Button asChild variant="outline">
             <Link href={`/?combo=${combination.publicSlug}`}>Abrir en dashboard</Link>
           </Button>
+          {session ? <ForkCombinationButton combinationId={combination.id} /> : null}
         </div>
       </div>
 
