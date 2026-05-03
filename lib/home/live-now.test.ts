@@ -3,6 +3,7 @@ import {
   rankLiveChannels,
   rankRelevantCombos,
   scoreCombo,
+  type ComboCandidate,
   type RankedChannel,
 } from "@/lib/home/live-now";
 import type { NewsChannel } from "@/lib/channels";
@@ -34,16 +35,6 @@ function makeSnapshot(isLive: boolean, viewerCount: number | null = null): LiveC
     startedAt: null,
   };
 }
-
-type ComboCandidate = {
-  id: string;
-  publicSlug: string;
-  name: string;
-  description: string | null;
-  favoritesCount: number;
-  layoutJson: unknown;
-  updatedAt: Date;
-};
 
 function makeCombo(overrides: Partial<ComboCandidate> & { layoutChannelIds?: string[] }): ComboCandidate {
   const { layoutChannelIds = [], ...rest } = overrides;
@@ -148,6 +139,19 @@ describe("rankRelevantCombos", () => {
 
   it("returns empty array for empty input", () => {
     expect(rankRelevantCombos([], liveIds, FAKE_NOW)).toEqual([]);
+  });
+
+  it("counts multiple live channels correctly", () => {
+    const combo = makeCombo({ layoutChannelIds: ["tn", "c5n", "a24"] });
+    const result = rankRelevantCombos([combo], liveIds, FAKE_NOW);
+    expect(result[0].liveChannelCount).toBe(2);
+    expect(result[0].totalChannelCount).toBe(3);
+  });
+
+  it("does not leak _score field into returned objects", () => {
+    const combo = makeCombo({ layoutChannelIds: ["tn"] });
+    const [result] = rankRelevantCombos([combo], liveIds, FAKE_NOW);
+    expect(Object.keys(result)).not.toContain("_score");
   });
 
   it("preserves all required fields on returned items", () => {

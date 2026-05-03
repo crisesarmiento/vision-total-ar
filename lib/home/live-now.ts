@@ -30,7 +30,7 @@ export const SCORE_WEIGHTS = {
 
 export function rankLiveChannels(
   allChannels: NewsChannel[],
-  snapshots: Record<string, LiveChannelSnapshot>,
+  snapshots: Record<string, LiveChannelSnapshot | undefined>,
 ): RankedChannel[] {
   return allChannels
     .filter((ch) => snapshots[ch.id]?.isLive)
@@ -49,8 +49,10 @@ export function scoreCombo(
   combo: { liveChannelCount: number; favoritesCount: number; updatedAt: Date },
   now: Date = new Date(),
 ): number {
-  const daysSince =
-    (now.getTime() - combo.updatedAt.getTime()) / (1000 * 60 * 60 * 24);
+  const daysSince = Math.max(
+    0,
+    (now.getTime() - combo.updatedAt.getTime()) / (1000 * 60 * 60 * 24),
+  );
   const recency = Math.pow(0.5, daysSince / SCORE_WEIGHTS.halfLifeDays);
   return (
     SCORE_WEIGHTS.live * combo.liveChannelCount +
@@ -59,7 +61,7 @@ export function scoreCombo(
   );
 }
 
-type ComboCandidate = {
+export type ComboCandidate = {
   id: string;
   publicSlug: string;
   name: string;
