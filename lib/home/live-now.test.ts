@@ -3,6 +3,7 @@ import {
   rankLiveChannels,
   rankRelevantCombos,
   scoreCombo,
+  type RankedChannel,
 } from "@/lib/home/live-now";
 import type { NewsChannel } from "@/lib/channels";
 import type { LiveChannelSnapshot } from "@/lib/youtube";
@@ -74,7 +75,7 @@ describe("rankLiveChannels", () => {
       c5n: makeSnapshot(false),
     };
     const result = rankLiveChannels(chList, snapshots);
-    expect(result.map((r) => r.id)).toEqual(["tn"]);
+    expect(result.map((r: RankedChannel) => r.id)).toEqual(["tn"]);
   });
 
   it("sorts live channels by viewerCount descending", () => {
@@ -85,7 +86,7 @@ describe("rankLiveChannels", () => {
       a24: makeSnapshot(true, 800),
     };
     const result = rankLiveChannels(chList, snapshots);
-    expect(result.map((r) => r.id)).toEqual(["c5n", "a24", "tn"]);
+    expect(result.map((r: RankedChannel) => r.id)).toEqual(["c5n", "a24", "tn"]);
   });
 
   it("treats null viewerCount as 0 when sorting", () => {
