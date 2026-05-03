@@ -13,12 +13,14 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { NewsChannel } from "@/lib/channels";
 import type { LiveChannelSnapshot } from "@/lib/youtube";
+import { StaleStreamOverlay } from "@/components/dashboard/stale-stream-overlay";
+import { evaluateStreamHealth, STALE_GRACE_MS } from "@/lib/stream-health";
 import { compactNumber, cn } from "@/lib/utils";
 import type { PlayerTile as PlayerTileState } from "@/store/dashboard-store";
 
@@ -32,6 +34,7 @@ type PlayerTileProps = {
   onToggleMute: (slotId: string) => void;
   onSetVolume: (slotId: string, volume: number) => void;
   onFocus: (slotId: string) => void;
+  onSwapChannel: (slotId: string) => void;
 };
 
 function sendIframeCommand(
@@ -59,11 +62,15 @@ export function PlayerTile({
   onToggleMute,
   onSetVolume,
   onFocus,
+  onSwapChannel,
 }: PlayerTileProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [firstSeenNotLiveAt, setFirstSeenNotLiveAt] = useState<number | null>(null);
+  const [, forceTick] = useReducer((x: number) => x + 1, 0);
   const playbackLabel = isPaused
     ? `Reproducir ${channel.name}`
     : `Pausar ${channel.name}`;
@@ -121,6 +128,22 @@ export function PlayerTile({
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
+  useEffect(() => {
+    if (snapshot?.isLive === false) {
+      setFirstSeenNotLiveAt((prev) => (prev === null ? Date.now() : prev));
+    } else {
+      setFirstSeenNotLiveAt(null);
+    }
+  }, [snapshot?.isLive]);
+
+  useEffect(() => {
+    if (firstSeenNotLiveAt === null) return;
+    const remaining = STALE_GRACE_MS - (Date.now() - firstSeenNotLiveAt);
+    if (remaining <= 0) return;
+    const timer = window.setTimeout(forceTick, remaining);
+    return () => window.clearTimeout(timer);
+  }, [firstSeenNotLiveAt]);
+
   const style = useMemo(
     () => ({
       transform: CSS.Transform.toString(transform),
@@ -128,6 +151,22 @@ export function PlayerTile({
     }),
     [reducedMotionEnabled, transform, transition],
   );
+
+  const healthStatus = evaluateStreamHealth(snapshot, firstSeenNotLiveAt);
+
+  const handleRetry = () => {
+    sendIframeCommand(iframeRef.current, "playVideo");
+    setFirstSeenNotLiveAt(null);
+  };
+
+  const handleReloadTile = () => {
+    setReloadKey((k) => k + 1);
+    setFirstSeenNotLiveAt(null);
+  };
+
+  const handleSwapChannel = () => {
+    onSwapChannel(player.slotId);
+  };
 
   const toggleFullscreen = async () => {
     if (!containerRef.current) {
@@ -251,6 +290,7 @@ export function PlayerTile({
         </div>
 
         <iframe
+          key={reloadKey}
           ref={iframeRef}
           className="aspect-video h-full min-h-[240px] w-full rounded-[1.5rem] border-0 bg-black"
           src={channel.liveUrl}
@@ -259,6 +299,15 @@ export function PlayerTile({
           allowFullScreen
           loading="lazy"
         />
+
+        {healthStatus === "stale" ? (
+          <StaleStreamOverlay
+            channelName={channel.name}
+            onRetry={handleRetry}
+            onReloadTile={handleReloadTile}
+            onSwapChannel={handleSwapChannel}
+          />
+        ) : null}
 
         <div className="absolute bottom-0 left-0 right-0 z-20 flex flex-col gap-3 bg-gradient-to-t from-black/90 via-black/30 to-transparent px-4 py-4">
           <div className="flex items-start justify-between gap-3">
