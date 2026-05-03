@@ -405,6 +405,11 @@ export function LiveDashboard({
     setSidebarOpen(false);
   };
 
+  const swapChannel = (slotId: string) => {
+    focusPlayer(slotId);
+    setSidebarOpen(true);
+  };
+
   const toggleFavorite = (channelId: string) => {
     if (!user) {
       toast.error("Ingresá para guardar favoritos.");
@@ -720,6 +725,7 @@ export function LiveDashboard({
                           onToggleMute={toggleMute}
                           onSetVolume={setVolume}
                           onFocus={focusPlayer}
+                          onSwapChannel={swapChannel}
                         />
                       );
                     })}
