@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const baseURL = process.env.BASE_URL ?? "http://localhost:3000";
+const healthURL = `${baseURL}/api/health`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -23,7 +24,8 @@ export default defineConfig({
     // In CI we run against a pre-built production server (started by the CI job before
     // invoking playwright). Locally, reuse the already-running dev server when available.
     command: process.env.CI ? "npm run start" : "npm run dev",
-    url: baseURL,
+    // Use the dedicated health endpoint so a failing homepage never blocks the suite.
+    url: healthURL,
     reuseExistingServer: !process.env.CI,
     timeout: process.env.CI ? 30_000 : 120_000,
   },
