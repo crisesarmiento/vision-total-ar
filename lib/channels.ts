@@ -1,5 +1,19 @@
 export type ChannelCategory = "noticias" | "streaming" | "tv";
 
+/**
+ * Refresh tier controls how frequently the live snapshot for a channel is
+ * revalidated from the YouTube Data API.
+ *
+ *  Tier 1 — 60 s   (top editorial channels; highest refresh priority)
+ *  Tier 2 — 120 s  (secondary channels; moderate refresh frequency)
+ *  Tier 3 — 300 s  (streaming / independent / lower-traffic channels)
+ *
+ * Quota cost per refresh cycle per channel: ~100 units (search.list) +
+ * 1 unit (videos.list, only when live). Tier 3 channels therefore consume
+ * ~5× fewer quota units per day than Tier 1 channels.
+ */
+export type RefreshTier = 1 | 2 | 3;
+
 export type NewsChannel = {
   id: string;
   name: string;
@@ -10,6 +24,7 @@ export type NewsChannel = {
   accent: string;
   description: string;
   isIndependent?: boolean;
+  refreshTier: RefreshTier;
 };
 
 const createLiveUrl = (channelId: string) =>
@@ -18,6 +33,7 @@ const createLiveUrl = (channelId: string) =>
   )}`;
 
 export const channels: NewsChannel[] = [
+  // --- Tier 1 (60 s refresh) — top editorial channels; matches DEFAULT_CHANNEL_IDS ---
   {
     id: "tn",
     name: "TN - Todo Noticias",
@@ -27,6 +43,7 @@ export const channels: NewsChannel[] = [
     category: "noticias",
     accent: "#2563eb",
     description: "Cobertura 24/7 de actualidad, política y economía.",
+    refreshTier: 1,
   },
   {
     id: "c5n",
@@ -37,6 +54,7 @@ export const channels: NewsChannel[] = [
     category: "noticias",
     accent: "#ef4444",
     description: "Noticias en vivo, móviles y programación política.",
+    refreshTier: 1,
   },
   {
     id: "lnmas",
@@ -47,6 +65,7 @@ export const channels: NewsChannel[] = [
     category: "noticias",
     accent: "#38bdf8",
     description: "Cobertura periodística en vivo desde la redacción de La Nación.",
+    refreshTier: 1,
   },
   {
     id: "a24",
@@ -57,7 +76,9 @@ export const channels: NewsChannel[] = [
     category: "noticias",
     accent: "#f97316",
     description: "Actualidad, análisis y debates en vivo.",
+    refreshTier: 1,
   },
+  // --- Tier 2 (120 s refresh) — secondary news and broad-reach TV channels ---
   {
     id: "canal26",
     name: "Canal 26",
@@ -67,6 +88,7 @@ export const channels: NewsChannel[] = [
     category: "noticias",
     accent: "#22c55e",
     description: "Cobertura de noticias, mercados y actualidad internacional.",
+    refreshTier: 2,
   },
   {
     id: "cronica",
@@ -77,7 +99,42 @@ export const channels: NewsChannel[] = [
     category: "noticias",
     accent: "#dc2626",
     description: "Último momento, policiales y móviles de alto impacto.",
+    refreshTier: 2,
   },
+  {
+    id: "america",
+    name: "América TV",
+    shortName: "América",
+    channelId: "UC9J7mCrq6h8BWW9Gs1lTgkg",
+    liveUrl: createLiveUrl("UC9J7mCrq6h8BWW9Gs1lTgkg"),
+    category: "tv",
+    accent: "#fb7185",
+    description: "Señal generalista con momentos de actualidad en vivo.",
+    refreshTier: 2,
+  },
+  {
+    id: "telefe",
+    name: "Telefe Noticias",
+    shortName: "Telefe",
+    channelId: "UC9rmiEjzbP_WsyM_yfW5R4w",
+    liveUrl: createLiveUrl("UC9rmiEjzbP_WsyM_yfW5R4w"),
+    category: "tv",
+    accent: "#60a5fa",
+    description: "Marca generalista con alto alcance y cobertura especial.",
+    refreshTier: 2,
+  },
+  {
+    id: "tvpublica",
+    name: "TV Pública",
+    shortName: "TV Pública",
+    channelId: "UCgCyHQGAqwB1sAEqEDngEEg",
+    liveUrl: createLiveUrl("UCgCyHQGAqwB1sAEqEDngEEg"),
+    category: "tv",
+    accent: "#16a34a",
+    description: "Canal estatal de aire con cobertura nacional.",
+    refreshTier: 2,
+  },
+  // --- Tier 3 (300 s refresh) — streaming/independent/lower-traffic channels ---
   {
     id: "luzu",
     name: "Luzu TV",
@@ -88,6 +145,7 @@ export const channels: NewsChannel[] = [
     accent: "#facc15",
     description: "Streaming en vivo con conversación social, cultura y política.",
     isIndependent: true,
+    refreshTier: 3,
   },
   {
     id: "olga",
@@ -99,6 +157,7 @@ export const channels: NewsChannel[] = [
     accent: "#a855f7",
     description: "Streaming en vivo con agenda propia y enfoque cultural.",
     isIndependent: true,
+    refreshTier: 3,
   },
   {
     id: "bondi",
@@ -110,6 +169,7 @@ export const channels: NewsChannel[] = [
     accent: "#14b8a6",
     description: "Señal digital para sumar miradas y streamers argentinos.",
     isIndependent: true,
+    refreshTier: 3,
   },
   {
     id: "ip",
@@ -120,36 +180,7 @@ export const channels: NewsChannel[] = [
     category: "noticias",
     accent: "#e11d48",
     description: "Noticias en vivo con foco en agenda nacional y federal.",
-  },
-  {
-    id: "america",
-    name: "América TV",
-    shortName: "América",
-    channelId: "UC9J7mCrq6h8BWW9Gs1lTgkg",
-    liveUrl: createLiveUrl("UC9J7mCrq6h8BWW9Gs1lTgkg"),
-    category: "tv",
-    accent: "#fb7185",
-    description: "Señal generalista con momentos de actualidad en vivo.",
-  },
-  {
-    id: "telefe",
-    name: "Telefe Noticias",
-    shortName: "Telefe",
-    channelId: "UC9rmiEjzbP_WsyM_yfW5R4w",
-    liveUrl: createLiveUrl("UC9rmiEjzbP_WsyM_yfW5R4w"),
-    category: "tv",
-    accent: "#60a5fa",
-    description: "Marca generalista con alto alcance y cobertura especial.",
-  },
-  {
-    id: "tvpublica",
-    name: "TV Pública",
-    shortName: "TV Pública",
-    channelId: "UCgCyHQGAqwB1sAEqEDngEEg",
-    liveUrl: createLiveUrl("UCgCyHQGAqwB1sAEqEDngEEg"),
-    category: "tv",
-    accent: "#16a34a",
-    description: "Canal estatal de aire con cobertura nacional.",
+    refreshTier: 3,
   },
   {
     id: "cn23",
@@ -160,6 +191,7 @@ export const channels: NewsChannel[] = [
     category: "noticias",
     accent: "#0891b2",
     description: "Señal de noticias con perspectiva federal y social.",
+    refreshTier: 3,
   },
   {
     id: "blender",
@@ -171,6 +203,7 @@ export const channels: NewsChannel[] = [
     accent: "#7c3aed",
     description: "Streaming independiente con debates y periodismo de investigación.",
     isIndependent: true,
+    refreshTier: 3,
   },
   {
     id: "canal-ciudad",
@@ -181,6 +214,7 @@ export const channels: NewsChannel[] = [
     category: "tv",
     accent: "#f59e0b",
     description: "Canal de la Ciudad Autónoma de Buenos Aires.",
+    refreshTier: 3,
   },
 ];
 
