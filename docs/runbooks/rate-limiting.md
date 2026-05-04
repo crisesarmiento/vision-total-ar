@@ -29,16 +29,8 @@ The repo-side limiter is an in-memory baseline:
 
 This is enough to catch obvious bursts in local, preview, and many production cases. It is not a replacement for platform-level production controls.
 
-## Vercel WAF Operational Note
+## Vercel WAF
 
-For production, configure Vercel WAF Rate Limiting for these paths:
+For production WAF configuration, deployment sequence, verification commands, and rollback guidance, see [`docs/runbooks/waf-protection.md`](./waf-protection.md).
 
-- `/api/auth/*`
-- `/api/live`
-- `/api/ticker`
-
-Use fixed-window limits aligned with the repo-side defaults, keyed by IP or JA4 digest where available. Start in `Log` mode if production traffic needs observation, then publish the rule with the default `429` action once the limits look safe.
-
-Reference: [Vercel WAF Rate Limiting](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting).
-
-Do not document private dashboard URLs, account paths, or credential values in this repository.
+The WAF layer complements these in-memory limits by surviving cold starts and multi-instance scale-out. Both layers are expected to be active in production.
