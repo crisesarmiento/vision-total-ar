@@ -73,6 +73,20 @@ Do not rely on chat history for durable decisions that future agents must follow
 - For security vulnerabilities, follow `SECURITY.md` and avoid public exploit details.
 - If private operational detail is required, stop at the public boundary and point maintainers to private skills or private systems.
 
+## Public API & Server Action Security Review
+
+Any change that touches a `/api/*` route, a Next.js Server Action, or an integration endpoint must review the following before merge:
+
+- **Auth boundaries** — confirm authentication is required where expected and authorization scope is correct.
+- **Abuse controls** — verify rate limits align with `docs/runbooks/rate-limiting.md`; extend limits if the new surface warrants it.
+- **Input validation** — validate and sanitize the request shape before any expensive work (DB, external call, email).
+- **Output sanitization** — ensure responses never include secrets, internal paths, stack traces, or PII.
+- **Caching behavior** — confirm cache headers are appropriate; never cache user-scoped data at a shared CDN layer.
+- **Observability** — log errors at an appropriate level without secret values; return `Retry-After`, `X-RateLimit-*` headers on throttled responses.
+- **Documentation boundary** — keep private WAF rule IDs, dashboard URLs, and credential values out of public files; reference `docs/runbooks/` instead.
+
+This checklist applies to agent-authored changes as well as human-authored changes. Agents must note which items were reviewed in the PR body.
+
 ## Validation
 
 Use the validation path appropriate to the change. The default full path is:

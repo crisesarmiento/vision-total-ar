@@ -31,5 +31,6 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - Vercel changes should verify preview and production behavior separately.
 - Neon PR preview branch workflows should use `pull_request`, skip fork PRs before reading secrets, avoid logging database URLs, and document whether Vercel preview env injection is included.
 - Rate limiting changes should keep repo-side limits public-safe, document Vercel WAF behavior without private dashboard details, and verify `/api/live`, `/api/ticker`, and auth routes.
+- Public API or server action changes must pass the security review checklist in `AGENTS.md` ("Public API & Server Action Security Review") before merge.
 
 For incidents requiring private credentials or dashboards, use private maintainer skills and record only public-safe evidence in issues and PRs.
