@@ -24,6 +24,14 @@ const feeds = [
     name: "La Nación",
     url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/",
   },
+  {
+    name: "Clarín",
+    url: "https://www.clarin.com/rss/lo-ultimo/",
+  },
+  {
+    name: "Perfil",
+    url: "https://www.perfil.com/feed/",
+  },
 ];
 
 export const getTickerItems = unstable_cache(
@@ -33,7 +41,7 @@ export const getTickerItems = unstable_cache(
         try {
           const parsed = await parser.parseURL(feed.url);
 
-          return (parsed.items ?? []).slice(0, 5).map((item) => ({
+          return (parsed.items ?? []).slice(0, 3).map((item) => ({
             id: `${feed.name}-${item.guid ?? item.link ?? item.title}`,
             title: item.title ?? "Titular sin título",
             link: item.link ?? "#",
@@ -53,7 +61,7 @@ export const getTickerItems = unstable_cache(
           new Date(right.publishedAt).getTime() -
           new Date(left.publishedAt).getTime(),
       )
-      .slice(0, 12);
+      .slice(0, 15);
   },
   ["vision-ar-ticker"],
   {
