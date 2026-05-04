@@ -20,12 +20,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    // In CI we run against a pre-built production server (started by the CI job before
+    // invoking playwright). Locally, reuse the already-running dev server when available.
+    command: process.env.CI ? "npm run start" : "npm run dev",
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    env: {
-      NODE_ENV: "test",
-    },
+    timeout: process.env.CI ? 30_000 : 120_000,
   },
 });
