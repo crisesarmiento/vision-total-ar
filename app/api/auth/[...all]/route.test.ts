@@ -105,5 +105,6 @@ describe("/api/auth rate limiting", () => {
     expect(response.headers.get("Retry-After")).toBeTruthy();
     expect(response.headers.get("X-RateLimit-Limit")).toBe("5");
     expect(response.headers.get("X-RateLimit-Remaining")).toBe("0");
+    expect(response.headers.get("X-RateLimit-Reset")).toBeTruthy();
   });
 });
