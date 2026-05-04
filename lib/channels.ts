@@ -1,4 +1,4 @@
-export type ChannelCategory = "noticias" | "streaming" | "tv";
+export type ChannelCategory = "noticias" | "streaming" | "tv" | "deportes";
 
 /**
  * Refresh tier controls how frequently the live snapshot for a channel is
@@ -214,6 +214,64 @@ export const channels: NewsChannel[] = [
     category: "tv",
     accent: "#f59e0b",
     description: "Canal de la Ciudad Autónoma de Buenos Aires.",
+    refreshTier: 3,
+  },
+  // --- Wave 2: Sports (Tier 2) — verified against official YouTube channel pages ---
+  {
+    id: "tycsports",
+    name: "TyC Sports",
+    shortName: "TyC",
+    channelId: "UC72ZaBKI-Bo5fjmWEYonhJw",
+    liveUrl: createLiveUrl("UC72ZaBKI-Bo5fjmWEYonhJw"),
+    category: "deportes",
+    accent: "#15803d",
+    description: "Fútbol argentino e internacional en vivo.",
+    refreshTier: 2,
+  },
+  {
+    id: "tnt-sports-ar",
+    name: "TNT Sports Argentina",
+    shortName: "TNT Sports",
+    channelId: "UCI5RY8G0ar-hLIaUJvx58Lw",
+    liveUrl: createLiveUrl("UCI5RY8G0ar-hLIaUJvx58Lw"),
+    category: "deportes",
+    accent: "#b91c1c",
+    description: "Fútbol, tenis y deportes en vivo desde Argentina.",
+    refreshTier: 2,
+  },
+  // --- Wave 2: Sports (Tier 3) ---
+  {
+    id: "fox-sports-ar",
+    name: "Fox Sports Argentina",
+    shortName: "Fox Sports",
+    channelId: "UCA5DCzl1x1oGcgZXwqgn7Dg",
+    liveUrl: createLiveUrl("UCA5DCzl1x1oGcgZXwqgn7Dg"),
+    category: "deportes",
+    accent: "#1d4ed8",
+    description: "Cobertura deportiva de ligas locales e internacionales.",
+    refreshTier: 3,
+  },
+  // --- Wave 2: Regional / Federal TV (Tier 3) — verified against official YouTube channel pages ---
+  {
+    id: "el-siete",
+    name: "El Siete Mendoza",
+    shortName: "El Siete",
+    channelId: "UC64ZNqX0FQHabP8iIkmnR3A",
+    liveUrl: createLiveUrl("UC64ZNqX0FQHabP8iIkmnR3A"),
+    category: "tv",
+    accent: "#7c3aed",
+    description: "Canal 7 de Mendoza con programación regional y noticias del Cuyo.",
+    refreshTier: 3,
+  },
+  {
+    id: "el-tres",
+    name: "El Tres Rosario",
+    shortName: "El Tres",
+    channelId: "UCW1sJwBOGgPhSPXJ-6pjF6w",
+    liveUrl: createLiveUrl("UCW1sJwBOGgPhSPXJ-6pjF6w"),
+    category: "tv",
+    accent: "#0d9488",
+    description: "Canal 3 de Rosario con noticias y programación del Litoral.",
     refreshTier: 3,
   },
 ];
