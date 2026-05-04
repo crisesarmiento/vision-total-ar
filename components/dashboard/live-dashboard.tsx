@@ -34,6 +34,7 @@ import {
 } from "@/actions/combinations";
 import { saveLayoutPreference as persistLayoutPreference } from "@/actions/user";
 import { HomeLiveNowSection } from "@/components/dashboard/home-live-now-section";
+import { LayoutImportExport } from "@/components/dashboard/layout-import-export";
 import { NewsTicker } from "@/components/dashboard/news-ticker";
 import { PlayerTile } from "@/components/dashboard/player-tile";
 import { SaveCombinationDialog } from "@/components/dashboard/save-combination-dialog";
@@ -704,6 +705,10 @@ export function LiveDashboard({
                 <ShareDashboardButton
                   layoutPayload={layoutPayload}
                   canonicalShare={canonicalShare}
+                />
+                <LayoutImportExport
+                  layoutPayload={layoutPayload}
+                  onImport={hydrateLayout}
                 />
               </div>
             </div>

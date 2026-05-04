@@ -91,3 +91,50 @@ export function decodeDashboardLayoutShareParam(
 export function serializeDashboardLayout(layout: DashboardLayout) {
   return JSON.stringify(normalizeSharedDashboardLayout(layout));
 }
+
+export type ImportLayoutResult =
+  | { ok: true; layout: DashboardLayout; skippedChannelIds: string[] }
+  | { ok: false; error: string };
+
+/**
+ * Parse a JSON string from an exported layout file and return the validated
+ * layout. Unknown channels are silently removed and reported in
+ * `skippedChannelIds`. Returns an error descriptor when the JSON is invalid
+ * or no valid players remain after filtering.
+ */
+export function importDashboardLayoutFromJson(json: string): ImportLayoutResult {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json) as unknown;
+  } catch {
+    return { ok: false, error: "El archivo no es un JSON válido." };
+  }
+
+  const result = dashboardLayoutSchema.safeParse(parsed);
+  if (!result.success) {
+    return { ok: false, error: "El archivo no contiene un layout de dashboard válido." };
+  }
+
+  const skippedChannelIds: string[] = [];
+  const validPlayers = result.data.players.filter((player) => {
+    const found = getChannelById(player.channelId);
+    if (!found) {
+      skippedChannelIds.push(player.channelId);
+      return false;
+    }
+    return true;
+  });
+
+  if (validPlayers.length === 0) {
+    return {
+      ok: false,
+      error: "Ninguna señal del layout importado está disponible en este momento.",
+    };
+  }
+
+  return {
+    ok: true,
+    layout: { preset: result.data.preset, players: validPlayers },
+    skippedChannelIds,
+  };
+}
