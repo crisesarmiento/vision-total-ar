@@ -16,6 +16,7 @@ import {
   LayoutGrid,
   Menu,
   MonitorPlay,
+  MonitorSmartphone,
   Pause,
   Pin,
   Play,
@@ -47,6 +48,7 @@ import {
   type SidebarChannelFilter,
 } from "@/lib/channel-filters";
 import { useLiveAlerts } from "@/lib/use-live-alerts";
+import { useWakeLock } from "@/lib/use-wake-lock";
 import type { DashboardLayout } from "@/lib/dashboard-layout";
 import type { RankedChannel, RankedCombo } from "@/lib/home/live-now";
 import type { CanonicalDashboardShare } from "@/lib/dashboard-share";
@@ -203,6 +205,8 @@ export function LiveDashboard({
     favoriteChannelIds: favoriteIds,
     enabled: liveAlertsEnabled && Boolean(user),
   });
+
+  const { isActive: wakeLockActive, isSupported: wakeLockSupported, toggle: toggleWakeLock } = useWakeLock();
 
   const visiblePlayers = useMemo(
     () => players.slice(0, preset.maxPlayers),
@@ -673,6 +677,21 @@ export function LiveDashboard({
                   <Button variant="secondary" onClick={() => setGlobalPlayback("pause")}>
                     <Pause className="mr-2 h-4 w-4" />
                     Pausa global
+                  </Button>
+                  <Button
+                    variant={wakeLockActive ? "default" : "secondary"}
+                    onClick={() => void toggleWakeLock()}
+                    disabled={!wakeLockSupported}
+                    title={
+                      wakeLockSupported
+                        ? wakeLockActive
+                          ? "Desactivar modo monitoreo (la pantalla puede apagarse)"
+                          : "Mantener pantalla encendida durante el monitoreo"
+                        : "Tu navegador no admite mantener la pantalla activa"
+                    }
+                  >
+                    <MonitorSmartphone className="mr-2 h-4 w-4" />
+                    {wakeLockActive ? "Pantalla activa" : "Mantener pantalla"}
                   </Button>
                 </div>
                 {user ? (
