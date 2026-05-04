@@ -8,6 +8,6 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: [".worktrees/**", "**/node_modules/**"],
+    exclude: [".worktrees/**", "**/node_modules/**", "e2e/**"],
   },
 });
