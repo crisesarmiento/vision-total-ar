@@ -23,6 +23,8 @@ type DashboardState = {
 };
 
 const ELECTION_CHANNEL_IDS = ["tn", "c5n", "lnmas", "a24", "canal26", "cronica"] as const;
+const DEPORTES_CHANNEL_IDS = ["tycsports", "tnt-sports-ar", "fox-sports-ar", "tycsports"] as const;
+const FEDERAL_CHANNEL_IDS = ["el-siete", "el-tres", "tvpublica", "canal-ciudad"] as const;
 
 function makePlayers(maxPlayers: number) {
   return Array.from({ length: maxPlayers }, (_, index) => ({
@@ -85,7 +87,11 @@ export const useDashboardStore = create<DashboardState>((set) => ({
       const players =
         preset === "elecciones"
           ? makePlayersFromChannels(ELECTION_CHANNEL_IDS)
-          : fillPlayersToCapacity(state.players, config.maxPlayers);
+          : preset === "deportes"
+            ? makePlayersFromChannels(DEPORTES_CHANNEL_IDS)
+            : preset === "federal"
+              ? makePlayersFromChannels(FEDERAL_CHANNEL_IDS)
+              : fillPlayersToCapacity(state.players, config.maxPlayers);
 
       return {
         layoutPreset: preset,
