@@ -21,6 +21,7 @@ function makeChannel(id: string, extra?: Partial<NewsChannel>): NewsChannel {
     category: "noticias",
     accent: "#ffffff",
     description: "",
+    refreshTier: 1,
     ...extra,
   };
 }
