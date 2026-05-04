@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { buildForkPayload } from "@/lib/combination-fork";
+import { dashboardLayoutSchema } from "@/lib/dashboard-layout";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 
@@ -11,12 +12,20 @@ const combinationSchema = z.object({
   name: z.string().min(2).max(60),
   description: z.string().max(240).optional(),
   visibility: z.enum(["PRIVATE", "PUBLIC"]),
-  layoutJson: z.any(),
+  layoutJson: dashboardLayoutSchema,
 });
 
 export async function saveCombination(input: z.infer<typeof combinationSchema>) {
   const session = await requireSession();
   const payload = combinationSchema.parse(input);
+
+  if (payload.id) {
+    const owned = await prisma.savedCombination.findFirst({
+      where: { id: payload.id, ownerId: session.user.id },
+      select: { id: true },
+    });
+    if (!owned) throw new Error("No encontramos esa combinación.");
+  }
 
   const combination = await prisma.savedCombination.upsert({
     where: {
@@ -238,8 +247,11 @@ export async function toggleFavoriteCombination(combinationId: string) {
   return result;
 }
 
+const MAX_SECONDS_WATCHED_PER_SESSION = 3600;
+
 export async function trackChannelView(channelId: string, secondsWatched = 15) {
   const session = await requireSession();
+  const clampedSeconds = Math.min(Math.max(0, secondsWatched), MAX_SECONDS_WATCHED_PER_SESSION);
 
   await prisma.channelAnalytics.upsert({
     where: {
@@ -253,7 +265,7 @@ export async function trackChannelView(channelId: string, secondsWatched = 15) {
         increment: 1,
       },
       secondsWatched: {
-        increment: secondsWatched,
+        increment: clampedSeconds,
       },
       lastWatchedAt: new Date(),
     },
@@ -261,7 +273,7 @@ export async function trackChannelView(channelId: string, secondsWatched = 15) {
       userId: session.user.id,
       channelId,
       sessionsCount: 1,
-      secondsWatched,
+      secondsWatched: clampedSeconds,
       lastWatchedAt: new Date(),
     },
   });
