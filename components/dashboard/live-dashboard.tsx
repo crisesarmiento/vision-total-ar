@@ -46,6 +46,7 @@ import {
   SIDEBAR_CHANNEL_FILTERS,
   type SidebarChannelFilter,
 } from "@/lib/channel-filters";
+import { useLiveAlerts } from "@/lib/use-live-alerts";
 import type { DashboardLayout } from "@/lib/dashboard-layout";
 import type { RankedChannel, RankedCombo } from "@/lib/home/live-now";
 import type { CanonicalDashboardShare } from "@/lib/dashboard-share";
@@ -82,6 +83,7 @@ type LiveDashboardProps = {
   canonicalShare?: CanonicalDashboardShare | null;
   reducedMotionEnabled?: boolean;
   tickerEnabled?: boolean;
+  liveAlertsEnabled?: boolean;
   liveNowChannels: RankedChannel[];
   liveNowCombos: RankedCombo[];
 };
@@ -139,6 +141,7 @@ export function LiveDashboard({
   canonicalShare,
   reducedMotionEnabled = false,
   tickerEnabled = true,
+  liveAlertsEnabled = false,
   liveNowChannels,
   liveNowCombos,
 }: LiveDashboardProps) {
@@ -193,6 +196,12 @@ export function LiveDashboard({
     enabled: tickerEnabled,
     refetchInterval: 300_000,
     retry: retryPollingQuery,
+  });
+
+  useLiveAlerts({
+    liveSnapshots,
+    favoriteChannelIds: favoriteIds,
+    enabled: liveAlertsEnabled && Boolean(user),
   });
 
   const visiblePlayers = useMemo(

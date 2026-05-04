@@ -82,6 +82,7 @@ export default async function Home({
       defaultLayoutJson: unknown;
       reducedMotion: boolean;
       tickerEnabled: boolean;
+      notificationsEnabled: boolean;
     } | null,
     { publicSlug: string; layoutJson: unknown } | null,
   ] = await Promise.all([
@@ -105,6 +106,7 @@ export default async function Home({
             defaultLayoutJson: true,
             reducedMotion: true,
             tickerEnabled: true,
+            notificationsEnabled: true,
           },
         })
       : Promise.resolve(null),
@@ -163,6 +165,7 @@ export default async function Home({
       canonicalShare={canonicalShare}
       reducedMotionEnabled={userPreference?.reducedMotion ?? false}
       tickerEnabled={userPreference?.tickerEnabled ?? true}
+      liveAlertsEnabled={userPreference?.notificationsEnabled ?? false}
       liveNowChannels={liveNowChannels}
       liveNowCombos={liveNowCombos}
     />
