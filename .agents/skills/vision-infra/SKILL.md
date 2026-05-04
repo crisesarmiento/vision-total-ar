@@ -32,5 +32,7 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - Neon PR preview branch workflows should use `pull_request`, skip fork PRs before reading secrets, avoid logging database URLs, and document whether Vercel preview env injection is included.
 - Rate limiting changes should keep repo-side limits public-safe, document Vercel WAF behavior without private dashboard details, and verify `/api/live`, `/api/ticker`, and auth routes.
 - Public API or server action changes must pass the security review checklist in `AGENTS.md` ("Public API & Server Action Security Review") before merge.
+- Live metadata route observability (runtime config, quota signals, error log prefixes, diagnostic playbook) is documented in `docs/runbooks/live-metadata-observability.md`.
+- WAF configuration, verification commands, and rollback guidance are documented in `docs/runbooks/waf-protection.md`.
 
 For incidents requiring private credentials or dashboards, use private maintainer skills and record only public-safe evidence in issues and PRs.
