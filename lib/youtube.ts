@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { channels } from "@/lib/channels";
 import type { NewsChannel } from "@/lib/channels";
+import { getQuotaStatus, incrementQuota, SEARCH_COST, VIDEOS_COST } from "@/lib/youtube-quota";
 
 export type LiveChannelSnapshot = {
   channelId: string;
@@ -34,6 +35,9 @@ async function fetchLiveVideoId(channelId: string, revalidate: number) {
     return null;
   }
 
+  // Track the search.list quota cost after a successful API call.
+  await incrementQuota(SEARCH_COST);
+
   const payload = (await response.json()) as {
     items?: Array<{
       id?: {
@@ -59,6 +63,9 @@ async function fetchVideoDetails(videoId: string, revalidate: number) {
   if (!response.ok) {
     return null;
   }
+
+  // Track the videos.list quota cost after a successful API call.
+  await incrementQuota(VIDEOS_COST);
 
   const payload = (await response.json()) as {
     items?: Array<{
@@ -96,6 +103,12 @@ function notLiveSnapshot(channel: NewsChannel): LiveChannelSnapshot {
  * interval to the underlying fetch calls so both the Next.js data cache and the
  * unstable_cache TTL match the intended refresh window.
  *
+ * Before making any YouTube API calls the function checks the estimated daily
+ * quota budget (configurable via YOUTUBE_QUOTA_BUDGET, default 9000 units).
+ * When the budget is exhausted every channel in the tier returns a safe
+ * not-live snapshot so the dashboard response shape is preserved and no hard
+ * failure occurs.
+ *
  * Quota cost per channel per cycle: ~100 units (search.list) + 1 unit
  * (videos.list, only when the channel is live).
  */
@@ -103,6 +116,16 @@ async function fetchSnapshotsForChannels(
   tierChannels: NewsChannel[],
   revalidate: number,
 ): Promise<Record<string, LiveChannelSnapshot>> {
+  const quota = await getQuotaStatus();
+
+  if (quota.exhausted) {
+    // Graceful degraded mode: return not-live for all channels in this tier
+    // without making any API calls. The dashboard remains functional.
+    return Object.fromEntries(
+      tierChannels.map((channel) => [channel.id, notLiveSnapshot(channel)]),
+    );
+  }
+
   const entries = await Promise.all(
     tierChannels.map(async (channel) => {
       const liveVideoId = await fetchLiveVideoId(channel.channelId, revalidate);
@@ -186,6 +209,10 @@ const getLiveTier3Snapshots = unstable_cache(
  * Public API — backward compatible with previous single-tier implementation.
  * Callers receive the same `Record<string, LiveChannelSnapshot>` shape
  * regardless of which tier each channel belongs to.
+ *
+ * Each tier checks the quota budget independently before making API calls;
+ * when the budget is exhausted all channels in that tier return not-live
+ * snapshots without consuming additional quota.
  *
  * Tier results are fetched in parallel; tier 1 entries win on key collision
  * (though channel ids are unique across tiers, so collisions should not occur).
