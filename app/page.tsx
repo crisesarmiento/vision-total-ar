@@ -61,7 +61,10 @@ export default async function Home({
       console.error("[page] getLiveSnapshots failed — degrading to empty snapshots", err);
       return {} as Awaited<ReturnType<typeof getLiveSnapshots>>;
     }),
-    getTickerItems(),
+    getTickerItems().catch((err) => {
+      console.error("[page] getTickerItems failed — degrading to empty ticker", err);
+      return [] as Awaited<ReturnType<typeof getTickerItems>>;
+    }),
     prisma.savedCombination.findMany({
       where: { visibility: "PUBLIC" },
       orderBy: [{ favoritesCount: "desc" }, { updatedAt: "desc" }],
