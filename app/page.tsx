@@ -57,7 +57,10 @@ export default async function Home({
       take: 4,
       select: { id: true, publicSlug: true, name: true, description: true, favoritesCount: true },
     }),
-    getLiveSnapshots(),
+    getLiveSnapshots().catch((err) => {
+      console.error("[page] getLiveSnapshots failed — degrading to empty snapshots", err);
+      return {} as Awaited<ReturnType<typeof getLiveSnapshots>>;
+    }),
     getTickerItems(),
     prisma.savedCombination.findMany({
       where: { visibility: "PUBLIC" },
