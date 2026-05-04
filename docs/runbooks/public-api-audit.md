@@ -57,7 +57,7 @@ as their first operation. An unauthenticated caller receives a `NEXT_REDIRECT` t
 
 | Action | Class | Auth check | Rate limit | Input validation | Observability | Gaps / follow-up |
 |--------|-------|-----------|-----------|-----------------|---------------|-----------------|
-| `saveCombination` | internal app action | ✅ `requireSession()` | None | ✅ Zod `combinationSchema` (name 2-60, description max 240, visibility enum, layoutJson any) | None | `layoutJson` is `z.any()` — no schema validation for layout shape. Follow-up: CRIS-286 |
+| `saveCombination` | internal app action | ✅ `requireSession()` | None | ✅ Zod `combinationSchema` (name 2-60, description max 240, visibility enum, layoutJson any) | None | `layoutJson` is `z.any()` — no schema validation for layout shape (CRIS-286); upsert update path has no `ownerId` guard — authenticated user can overwrite any combination by ID (CRIS-288) |
 | `forkPublicCombination` | internal app action | ✅ `requireSession()` | None | Source existence verified in DB; `sourceId` is a raw string | None | No Zod schema for `sourceId` — any string is accepted; throws if source is not public or not found |
 | `deleteCombination` | internal app action | ✅ `requireSession()` | None | `id` is a raw string; ownership enforced by `deleteMany` WHERE clause | None | None identified |
 | `markCombinationAsUsed` | internal app action | ✅ `requireSession()` | None | `combinationId` is a raw string | None | No bounds check; a valid session could call this at high frequency. Low risk. |
@@ -94,14 +94,14 @@ cookie presence is the signal.
 
 ## Security Headers
 
-Configured in `next.config.ts` via the `headers()` export and applied to all
-routes matching `/(.*)`; see `lib/security-headers.ts` (added in CRIS-266).
+Configured in `next.config.ts` as the `securityHeaders` constant and applied to all
+routes matching `/(.*)`; see `next.config.ts` directly for the full CSP and header values.
 
 Key headers: `Content-Security-Policy`, `X-Content-Type-Options`,
 `X-Frame-Options`, `Strict-Transport-Security`, `Referrer-Policy`,
 `Permissions-Policy`.
 
-See the regression test `lib/security-headers.test.ts` for exact assertions.
+Regression tests for the header values are planned in CRIS-266.
 
 ---
 
@@ -120,3 +120,4 @@ See the regression test `lib/security-headers.test.ts` for exact assertions.
 |----|-------|---------|
 | [CRIS-286](https://linear.app/cris-emi/issue/CRIS-286) | Chore: add layout JSON schema validation to `saveCombination` | Low |
 | [CRIS-287](https://linear.app/cris-emi/issue/CRIS-287) | Chore: add upper-bound validation on `secondsWatched` in `trackChannelView` | Low |
+| [CRIS-288](https://linear.app/cris-emi/issue/CRIS-288) | Bug: saveCombination upsert update path missing ownerId ownership guard | High |
