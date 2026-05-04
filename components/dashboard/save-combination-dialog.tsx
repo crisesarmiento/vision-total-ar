@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { saveCombination } from "@/actions/combinations";
+import type { DashboardLayout } from "@/lib/dashboard-layout";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 type SaveCombinationDialogProps = {
-  layoutPayload: unknown;
+  layoutPayload: DashboardLayout;
   triggerLabel?: string;
 };
 

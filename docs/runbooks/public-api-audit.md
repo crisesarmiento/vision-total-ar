@@ -4,8 +4,8 @@ This document classifies every API route, UploadThing handler, and server action
 in Vision AR and identifies their current abuse controls. It is a living document —
 update it whenever a new surface is added or an existing one changes.
 
-**Last reviewed:** 2026-05-03  
-**Reviewed against:** `develop` branch (post CRIS-232, CRIS-237, CRIS-265)
+**Last reviewed:** 2026-05-04  
+**Reviewed against:** `develop` branch (post CRIS-232, CRIS-237, CRIS-265, CRIS-286, CRIS-287, CRIS-288)
 
 Private production data, dashboard URLs, WAF rule IDs, credentials, and incident
 details are never committed to this repository. Follow-up tickets are linked from
@@ -57,13 +57,13 @@ as their first operation. An unauthenticated caller receives a `NEXT_REDIRECT` t
 
 | Action | Class | Auth check | Rate limit | Input validation | Observability | Gaps / follow-up |
 |--------|-------|-----------|-----------|-----------------|---------------|-----------------|
-| `saveCombination` | internal app action | ✅ `requireSession()` | None | ✅ Zod `combinationSchema` (name 2-60, description max 240, visibility enum, layoutJson any) | None | `layoutJson` is `z.any()` — no schema validation for layout shape (CRIS-286); upsert update path has no `ownerId` guard — authenticated user can overwrite any combination by ID (CRIS-288) |
+| `saveCombination` | internal app action | ✅ `requireSession()` | None | ✅ Zod `combinationSchema` (name 2-60, description max 240, visibility enum, `layoutJson` validated by `dashboardLayoutSchema`) + `ownerId` pre-check on update path | None | ✅ CRIS-286 resolved: `layoutJson` now validated by `dashboardLayoutSchema`; ✅ CRIS-288 resolved: ownership pre-check added before upsert |
 | `forkPublicCombination` | internal app action | ✅ `requireSession()` | None | Source existence verified in DB; `sourceId` is a raw string | None | No Zod schema for `sourceId` — any string is accepted; throws if source is not public or not found |
 | `deleteCombination` | internal app action | ✅ `requireSession()` | None | `id` is a raw string; ownership enforced by `deleteMany` WHERE clause | None | None identified |
 | `markCombinationAsUsed` | internal app action | ✅ `requireSession()` | None | `combinationId` is a raw string | None | No bounds check; a valid session could call this at high frequency. Low risk. |
 | `toggleFavoriteChannel` | internal app action | ✅ `requireSession()` | None | `channelId` is a raw string | None | None identified |
 | `toggleFavoriteCombination` | internal app action | ✅ `requireSession()` | None | Validates `visibility: PUBLIC` in DB before toggling | None | None identified |
-| `trackChannelView` | internal app action | ✅ `requireSession()` | None | `secondsWatched` defaults to 15 but accepts any number — no bounds check | None | No upper bound on `secondsWatched`. Low risk (data quality, not security). Follow-up: CRIS-287 |
+| `trackChannelView` | internal app action | ✅ `requireSession()` | None | `secondsWatched` clamped to `[0, 3600]` before write | None | ✅ CRIS-287 resolved: `secondsWatched` capped at 3600 |
 
 ### `actions/user.ts`
 
