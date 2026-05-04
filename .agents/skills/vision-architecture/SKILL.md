@@ -18,6 +18,18 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - External integrations: YouTube, RSS, UploadThing, email, GitHub, Linear, Neon
 - Security, privacy, and public repository constraints
 
+## Public API Security Review
+
+When the change touches a `/api/*` route, a Server Action, or an integration endpoint, review each item from the checklist in `AGENTS.md` ("Public API & Server Action Security Review") and verify:
+
+- Auth boundaries — authentication required; authorization scope correct
+- Abuse controls — rate limits consistent with `docs/runbooks/rate-limiting.md`
+- Input validation — request shape validated before expensive work
+- Output sanitization — no secrets, paths, stack traces, or PII in responses
+- Caching behavior — no user-scoped data served from a shared cache layer
+- Observability — errors logged without secret values; throttle headers present
+- Documentation boundary — private WAF/dashboard detail stays out of public files
+
 ## Output Standard
 
 Produce implementation-ready plans with:

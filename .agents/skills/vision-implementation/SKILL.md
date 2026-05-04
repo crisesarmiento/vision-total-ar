@@ -29,8 +29,9 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 
 1. Read the touched area before editing.
 2. Identify schema, auth, caching, runtime, and public API impact.
-3. Update docs or runbooks when behavior or setup changes.
-4. Add or update tests for reusable logic and regression-prone behavior.
-5. Run the validation path from `vision-testing`.
+3. If the change touches a `/api/*` route, a Server Action, or an integration endpoint, apply the public API security review checklist from `AGENTS.md` ("Public API & Server Action Security Review") and note the reviewed items in the PR body.
+4. Update docs or runbooks when behavior or setup changes.
+5. Add or update tests for reusable logic and regression-prone behavior.
+6. Run the validation path from `vision-testing`.
 
 Create follow-up Linear issues for architectural, security, or operational risks that should not be folded into the current ticket.

@@ -26,6 +26,7 @@ Run these for most code changes:
 - Prisma schema changes: run migration checks and document production migration implications.
 - Vercel behavior: use PR preview checks for UI/runtime changes; use production smoke checks only after a release or incident fix.
 - Public routes: verify `/`, `/api/live`, and `/api/ticker` when runtime, database, or cache behavior changes.
+- Public API / server action changes: verify auth boundaries, confirm `429` + `Retry-After` headers on throttled responses, and check output sanitization (no secrets or PII); apply the security review checklist in `AGENTS.md` and report reviewed items in the PR body.
 
 ## Reporting
 
