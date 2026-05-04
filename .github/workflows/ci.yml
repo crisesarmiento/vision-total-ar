@@ -79,6 +79,10 @@ jobs:
     env:
       DATABASE_URL: postgresql://vision:vision@localhost:5432/vision_ar
       PRISMA_DIRECT_TCP_URL: postgresql://vision:vision@localhost:5432/vision_ar
+      # Use direct TCP driver — the CI database is plain Postgres, not Neon.
+      # Without this, PrismaNeon tries to connect via WebSocket and fails with
+      # an ErrorEvent that propagates through unstable_cache into the page SSR.
+      DATABASE_DRIVER: pg
       BETTER_AUTH_SECRET: ci-secret-e2e
       BETTER_AUTH_URL: http://localhost:3000
       NEXT_PUBLIC_APP_URL: http://localhost:3000
