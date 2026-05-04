@@ -10,7 +10,7 @@ import { middleware } from "./middleware";
 
 describe("middleware route protection", () => {
   beforeEach(() => {
-    vi.mocked(getSessionCookie).mockReturnValue(undefined);
+    vi.mocked(getSessionCookie).mockReturnValue(null);
   });
 
   describe("unauthenticated user", () => {
