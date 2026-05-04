@@ -4,6 +4,18 @@ import { auth } from "@/lib/auth";
 
 const f = createUploadthing();
 
+export async function requireUploadAuth({ req }: { req: Request }) {
+  const session = await auth.api.getSession({
+    headers: req.headers,
+  });
+
+  if (!session?.user) {
+    throw new UploadThingError("No autorizado");
+  }
+
+  return { userId: session.user.id };
+}
+
 export const uploadRouter = {
   avatarUploader: f({
     image: {
@@ -11,19 +23,7 @@ export const uploadRouter = {
       maxFileSize: "4MB",
     },
   })
-    .middleware(async ({ req }) => {
-      const session = await auth.api.getSession({
-        headers: req.headers,
-      });
-
-      if (!session?.user) {
-        throw new UploadThingError("No autorizado");
-      }
-
-      return {
-        userId: session.user.id,
-      };
-    })
+    .middleware(requireUploadAuth)
     .onUploadComplete(async ({ metadata, file }) => ({
       uploadedBy: metadata.userId,
       url: file.ufsUrl,
