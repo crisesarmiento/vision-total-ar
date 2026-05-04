@@ -46,4 +46,23 @@ describe("/api/live rate limiting", () => {
       error: "rate_limited",
     });
   });
+
+  it("includes rate-limit headers on 429", async () => {
+    const request = () =>
+      new Request("http://localhost/api/live", {
+        headers: { "x-forwarded-for": "203.0.113.22" },
+      });
+
+    for (let index = 0; index < 30; index += 1) {
+      await GET(request());
+    }
+
+    const response = await GET(request());
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeTruthy();
+    expect(response.headers.get("X-RateLimit-Limit")).toBe("30");
+    expect(response.headers.get("X-RateLimit-Remaining")).toBe("0");
+    expect(response.headers.get("X-RateLimit-Reset")).toBeTruthy();
+  });
 });
