@@ -57,13 +57,13 @@ as their first operation. An unauthenticated caller receives a `NEXT_REDIRECT` t
 
 | Action | Class | Auth check | Rate limit | Input validation | Observability | Gaps / follow-up |
 |--------|-------|-----------|-----------|-----------------|---------------|-----------------|
-| `saveCombination` | internal app action | ✅ `requireSession()` | None | ✅ Zod `combinationSchema` (name 2-60, description max 240, visibility enum, layoutJson any) | None | `layoutJson` is `z.any()` — no schema validation for layout shape. Follow-up: CRIS-264a |
+| `saveCombination` | internal app action | ✅ `requireSession()` | None | ✅ Zod `combinationSchema` (name 2-60, description max 240, visibility enum, layoutJson any) | None | `layoutJson` is `z.any()` — no schema validation for layout shape. Follow-up: CRIS-286 |
 | `forkPublicCombination` | internal app action | ✅ `requireSession()` | None | Source existence verified in DB; `sourceId` is a raw string | None | No Zod schema for `sourceId` — any string is accepted and silently returns no-op if not found |
 | `deleteCombination` | internal app action | ✅ `requireSession()` | None | `id` is a raw string; ownership enforced by `deleteMany` WHERE clause | None | None identified |
 | `markCombinationAsUsed` | internal app action | ✅ `requireSession()` | None | `combinationId` is a raw string | None | No bounds check; a valid session could call this at high frequency. Low risk. |
 | `toggleFavoriteChannel` | internal app action | ✅ `requireSession()` | None | `channelId` is a raw string | None | None identified |
 | `toggleFavoriteCombination` | internal app action | ✅ `requireSession()` | None | Validates `visibility: PUBLIC` in DB before toggling | None | None identified |
-| `trackChannelView` | internal app action | ✅ `requireSession()` | None | `secondsWatched` defaults to 15 but accepts any number — no bounds check | None | No upper bound on `secondsWatched`. Low risk (data quality, not security). Follow-up: CRIS-264b |
+| `trackChannelView` | internal app action | ✅ `requireSession()` | None | `secondsWatched` defaults to 15 but accepts any number — no bounds check | None | No upper bound on `secondsWatched`. Low risk (data quality, not security). Follow-up: CRIS-287 |
 
 ### `actions/user.ts`
 
@@ -118,8 +118,5 @@ See the regression test `lib/security-headers.test.ts` for exact assertions.
 
 | ID | Title | Priority |
 |----|-------|---------|
-| CRIS-264a | Chore: add layout JSON schema validation to `saveCombination` | Low |
-| CRIS-264b | Chore: add upper-bound validation on `secondsWatched` in `trackChannelView` | Low |
-
-> Create these two Linear tickets under CRIS-262 in the same cycle as CRIS-264
-> using the Linear MCP `save_issue` tool after the audit doc is committed.
+| [CRIS-286](https://linear.app/cris-emi/issue/CRIS-286) | Chore: add layout JSON schema validation to `saveCombination` | Low |
+| [CRIS-287](https://linear.app/cris-emi/issue/CRIS-287) | Chore: add upper-bound validation on `secondsWatched` in `trackChannelView` | Low |
