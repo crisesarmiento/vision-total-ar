@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { clearRateLimitBuckets } from "@/lib/rate-limit";
-import { POST } from "./route";
+import { GET, POST } from "./route";
 
 vi.mock("@/lib/auth", () => ({
   auth: {},
@@ -63,5 +63,48 @@ describe("/api/auth rate limiting", () => {
     await expect(response.json()).resolves.toMatchObject({
       error: "rate_limited",
     });
+  });
+
+  it("returns 429 after GET burst limit with rate-limit headers", async () => {
+    const request = () =>
+      new Request("http://localhost/api/auth/session", {
+        headers: { "x-forwarded-for": "203.0.113.41" },
+      });
+
+    for (let index = 0; index < 120; index += 1) {
+      await GET(request());
+    }
+
+    const response = await GET(request());
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeTruthy();
+    expect(response.headers.get("X-RateLimit-Limit")).toBe("120");
+    expect(response.headers.get("X-RateLimit-Remaining")).toBe("0");
+    expect(response.headers.get("X-RateLimit-Reset")).toBeTruthy();
+  });
+
+  it("includes rate-limit headers on magic-link POST 429", async () => {
+    const request = (email: string) =>
+      new Request("http://localhost/api/auth/sign-in/magic-link", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-forwarded-for": "203.0.113.51",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+    for (let index = 0; index < 5; index += 1) {
+      await POST(request("headers-test@example.com"));
+    }
+
+    const response = await POST(request("headers-test@example.com"));
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeTruthy();
+    expect(response.headers.get("X-RateLimit-Limit")).toBe("5");
+    expect(response.headers.get("X-RateLimit-Remaining")).toBe("0");
+    expect(response.headers.get("X-RateLimit-Reset")).toBeTruthy();
   });
 });
