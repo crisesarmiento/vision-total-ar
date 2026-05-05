@@ -12,7 +12,9 @@ import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeftRight,
+  CheckCircle2,
   Command,
+  Library,
   LayoutGrid,
   Menu,
   MonitorPlay,
@@ -20,7 +22,11 @@ import {
   Pause,
   Pin,
   Play,
+  Radio,
+  Settings2,
+  Share2,
   Star,
+  UserRound,
   Volume2,
   X,
 } from "lucide-react";
@@ -73,6 +79,13 @@ type FeaturedCombination = {
   description: string | null;
   favoritesCount: number;
 };
+
+const CHANNEL_CATEGORY_LABELS = {
+  noticias: "Noticias",
+  streaming: "Streaming",
+  tv: "TV",
+  deportes: "Deportes",
+} as const;
 
 type LiveDashboardProps = {
   user: DashboardUser | null;
@@ -158,6 +171,10 @@ export function LiveDashboard({
   const [search, setSearch] = useState("");
   const [sidebarFilter, setSidebarFilter] = useState<SidebarChannelFilter>("all");
   const [favoriteIds, setFavoriteIds] = useState(favoriteChannelIds);
+  const [assignmentFeedback, setAssignmentFeedback] = useState<{
+    slotId: string;
+    channelName: string;
+  } | null>(null);
   const [isPending, startTransition] = useTransition();
   const hasAppliedInitialLayout = useRef(false);
   const sidebarOpenButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -213,6 +230,29 @@ export function LiveDashboard({
     () => players.slice(0, preset.maxPlayers),
     [players, preset.maxPlayers],
   );
+  const focusedPlayer = useMemo(
+    () => visiblePlayers.find((player) => player.slotId === focusedPlayerId) ?? visiblePlayers[0],
+    [focusedPlayerId, visiblePlayers],
+  );
+  const focusedPlayerIndex = focusedPlayer
+    ? visiblePlayers.findIndex((player) => player.slotId === focusedPlayer.slotId)
+    : -1;
+  const focusedPlayerChannel = focusedPlayer
+    ? getChannelById(focusedPlayer.channelId)
+    : null;
+  const selectedChannelSlots = useMemo(
+    () =>
+      new Map(
+        visiblePlayers.map((player, index) => [
+          player.channelId,
+          {
+            slotId: player.slotId,
+            position: index + 1,
+          },
+        ]),
+      ),
+    [visiblePlayers],
+  );
 
   const layoutPayload = useMemo(
     () => ({
@@ -259,6 +299,18 @@ export function LiveDashboard({
 
     return "No hay señales disponibles para este filtro.";
   }, [search, sidebarFilter, user]);
+
+  useEffect(() => {
+    if (!assignmentFeedback) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setAssignmentFeedback(null);
+    }, 3_500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [assignmentFeedback]);
 
   useEffect(() => {
     if (hasAppliedInitialLayout.current) {
@@ -395,12 +447,17 @@ export function LiveDashboard({
 
   const assignChannel = (channelId: string) => {
     const slotId = focusedPlayerId ?? visiblePlayers[0]?.slotId;
+    const channel = getChannelById(channelId);
 
     if (!slotId) {
       return;
     }
 
     setChannel(slotId, channelId);
+    setAssignmentFeedback({
+      slotId,
+      channelName: channel?.shortName ?? channelId,
+    });
     shouldRestoreSidebarFocus.current = true;
     setSidebarOpen(false);
 
@@ -447,6 +504,13 @@ export function LiveDashboard({
 
   const gridColumns =
     preset.columns === 1 ? "grid-cols-1" : preset.columns === 2 ? "md:grid-cols-2" : preset.columns === 3 ? "md:grid-cols-2 xl:grid-cols-3" : "md:grid-cols-2 xl:grid-cols-4";
+  const assignmentFeedbackSlotIndex = assignmentFeedback
+    ? visiblePlayers.findIndex((player) => player.slotId === assignmentFeedback.slotId)
+    : -1;
+  const assignmentFeedbackTarget =
+    assignmentFeedbackSlotIndex >= 0
+      ? `pantalla ${assignmentFeedbackSlotIndex + 1}`
+      : "la pantalla enfocada";
 
   useEffect(() => {
     if (sidebarOpen) {
@@ -473,8 +537,8 @@ export function LiveDashboard({
         ) : null}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-40 w-[320px] border-r border-white/10 bg-slate-950/95 p-4 backdrop-blur-xl md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:translate-x-0 md:rounded-[2rem]",
-            !reducedMotionEnabled && "motion-safe:transition-transform",
+            "fixed inset-y-0 left-0 z-40 w-[320px] overflow-y-auto border-r border-white/10 bg-slate-950/95 p-4 backdrop-blur-xl md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:translate-x-0 md:rounded-[2rem]",
+            !shouldReduceMotion && "motion-safe:transition-transform",
             sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           )}
           aria-label="Selector de señales"
@@ -507,6 +571,22 @@ export function LiveDashboard({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="rounded-3xl border border-primary/20 bg-primary/10 px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.22em] text-primary/80">
+                    Pantalla enfocada
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Badge variant="live">
+                      {focusedPlayerIndex >= 0 ? `Pantalla ${focusedPlayerIndex + 1}` : "Pantalla"}
+                    </Badge>
+                    <span className="min-w-0 text-sm font-medium text-white">
+                      {focusedPlayerChannel?.shortName ?? "Sin señal"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-white/60">
+                    La próxima señal elegida reemplaza esta pantalla.
+                  </p>
+                </div>
                 <Input
                   ref={sidebarSearchRef}
                   value={search}
@@ -538,27 +618,47 @@ export function LiveDashboard({
                     filteredChannels.map((channel) => {
                       const isFavorite = favoriteIds.includes(channel.id);
                       const isLive = liveSnapshots[channel.id]?.isLive;
+                      const assignedSlot = selectedChannelSlots.get(channel.id);
+                      const isFocusedChannel = focusedPlayer?.channelId === channel.id;
 
                       return (
                         <div
                           key={channel.id}
-                          className="flex items-start justify-between gap-3 rounded-3xl border border-white/10 bg-black/20 px-4 py-3 transition hover:border-primary/40 hover:bg-white/5"
+                          className={cn(
+                            "flex items-start justify-between gap-3 rounded-3xl border border-white/10 bg-black/20 px-4 py-3 transition hover:border-primary/40 hover:bg-white/5",
+                            isFocusedChannel && "border-primary/50 bg-primary/10",
+                          )}
                         >
                           <button
                             type="button"
                             onClick={() => assignChannel(channel.id)}
-                            className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="min-w-0 flex-1 rounded-2xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            aria-label={`Asignar ${channel.name} a ${
+                              focusedPlayerIndex >= 0
+                                ? `pantalla ${focusedPlayerIndex + 1}`
+                                : "la pantalla enfocada"
+                            }`}
                           >
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="font-medium">{channel.shortName}</span>
-                              {isLive ? (
-                                <span
-                                  aria-hidden="true"
-                                  className="h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]"
-                                />
-                              ) : null}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="min-w-0 font-medium">{channel.shortName}</span>
+                              <span
+                                aria-hidden="true"
+                                className="h-2.5 w-2.5 rounded-full"
+                                style={{ backgroundColor: channel.accent }}
+                              />
+                              <Badge variant={isLive ? "live" : "secondary"}>
+                                {isLive ? "En vivo" : "Stand-by"}
+                              </Badge>
+                              <Badge variant="outline">
+                                {CHANNEL_CATEGORY_LABELS[channel.category]}
+                              </Badge>
                               {channel.isIndependent ? (
                                 <Badge variant="secondary">Independiente</Badge>
+                              ) : null}
+                              {assignedSlot ? (
+                                <Badge variant={isFocusedChannel ? "live" : "outline"}>
+                                  En pantalla {assignedSlot.position}
+                                </Badge>
                               ) : null}
                             </div>
                             <p className="line-clamp-2 text-sm text-white/70">
@@ -594,7 +694,10 @@ export function LiveDashboard({
                     })
                   ) : (
                     <div className="rounded-3xl border border-white/10 bg-black/20 px-4 py-5 text-sm text-white/65">
-                      {channelListEmptyMessage}
+                      <p>{channelListEmptyMessage}</p>
+                      <p className="mt-2 text-xs text-white/45">
+                        Probá limpiar la búsqueda o cambiar el filtro rápido.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -628,59 +731,108 @@ export function LiveDashboard({
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col gap-6">
-          <header className="glass-panel sticky top-4 z-30 flex flex-col gap-4 rounded-[2rem] px-4 py-4 md:px-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+          <header className="glass-panel sticky top-4 z-30 flex flex-col gap-2 rounded-[2rem] px-3 py-3 md:gap-3 md:px-6 md:py-4">
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]">
+              <div className="flex min-w-0 items-start gap-3">
                 <Button
                   ref={sidebarOpenButtonRef}
                   variant="secondary"
                   size="icon"
-                  className="md:hidden"
+                  className="mt-1 shrink-0 md:hidden"
                   onClick={openSidebar}
                   aria-label="Abrir selector de señales"
                   title="Abrir selector de señales"
                 >
                   <Menu className="h-4 w-4" />
                 </Button>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs uppercase tracking-[0.3em] text-white/50">
                     Dashboard multiview
                   </p>
-                  <h2 className="text-2xl font-semibold">
+                  <h2 className="text-balance text-xl font-semibold leading-tight sm:text-2xl">
                     Seguimiento en tiempo real de medios argentinos
                   </h2>
+                  {assignmentFeedback ? (
+                    <p
+                      className="mt-2 flex items-center gap-2 text-sm text-primary"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      {assignmentFeedback.channelName} asignado a {assignmentFeedbackTarget}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
-              <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:justify-end">
+              <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                 {user ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button asChild variant="secondary">
-                      <Link href="/mis-combinaciones">Mis combinaciones</Link>
+                  <div
+                    className="flex w-full flex-wrap items-center gap-2 rounded-3xl border border-white/10 bg-black/20 p-2 sm:w-auto"
+                    role="navigation"
+                    aria-label="Navegación de cuenta"
+                  >
+                    <Button asChild variant="ghost" size="sm" className="flex-1 whitespace-normal sm:flex-none">
+                      <Link href="/mis-combinaciones">
+                        <Library className="h-4 w-4" />
+                        Mis combinaciones
+                      </Link>
                     </Button>
-                    <Button asChild variant="secondary">
-                      <Link href="/perfil">Perfil</Link>
+                    <Button asChild variant="ghost" size="sm" className="flex-1 whitespace-normal sm:flex-none">
+                      <Link href="/perfil">
+                        <UserRound className="h-4 w-4" />
+                        Perfil
+                      </Link>
                     </Button>
-                    <Button asChild variant="secondary">
-                      <Link href="/configuracion">Configuración</Link>
+                    <Button asChild variant="ghost" size="sm" className="flex-1 whitespace-normal sm:flex-none">
+                      <Link href="/configuracion">
+                        <Settings2 className="h-4 w-4" />
+                        Configuración
+                      </Link>
                     </Button>
                   </div>
                 ) : null}
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="secondary" onClick={toggleGlobalMute}>
-                    <Volume2 className="mr-2 h-4 w-4" />
+              </div>
+            </div>
+
+            <div className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <div className="min-w-0 rounded-3xl border border-white/10 bg-black/20 p-2 md:p-3">
+                <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/45 md:mb-2">
+                  <Radio className="h-3.5 w-3.5" />
+                  Monitoreo
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-4">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-9 min-w-[8.5rem] justify-start px-3 text-left leading-tight sm:min-w-0"
+                    onClick={toggleGlobalMute}
+                  >
+                    <Volume2 className="h-4 w-4 shrink-0" />
                     {globalMuted ? "Activar audio" : "Silenciar todo"}
                   </Button>
-                  <Button variant="secondary" onClick={() => setGlobalPlayback("play")}>
-                    <Play className="mr-2 h-4 w-4" />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-9 min-w-[8rem] justify-start px-3 text-left leading-tight sm:min-w-0"
+                    onClick={() => setGlobalPlayback("play")}
+                  >
+                    <Play className="h-4 w-4 shrink-0" />
                     Play global
                   </Button>
-                  <Button variant="secondary" onClick={() => setGlobalPlayback("pause")}>
-                    <Pause className="mr-2 h-4 w-4" />
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-9 min-w-[8rem] justify-start px-3 text-left leading-tight sm:min-w-0"
+                    onClick={() => setGlobalPlayback("pause")}
+                  >
+                    <Pause className="h-4 w-4 shrink-0" />
                     Pausa global
                   </Button>
                   <Button
                     variant={wakeLockActive ? "default" : "secondary"}
+                    size="sm"
+                    className="h-9 min-w-[11rem] justify-start px-3 text-left leading-tight sm:min-w-0"
                     onClick={() => void toggleWakeLock()}
                     disabled={!wakeLockSupported}
                     title={
@@ -691,39 +843,60 @@ export function LiveDashboard({
                         : "Tu navegador no admite mantener la pantalla activa"
                     }
                   >
-                    <MonitorSmartphone className="mr-2 h-4 w-4" />
+                    <MonitorSmartphone className="h-4 w-4 shrink-0" />
                     {wakeLockActive ? "Pantalla activa" : "Mantener pantalla"}
                   </Button>
                 </div>
-                {user ? (
-                  <SaveCombinationDialog layoutPayload={layoutPayload} />
-                ) : (
-                  <Button asChild>
-                    <Link href="/ingresar">Ingresar para guardar</Link>
-                  </Button>
-                )}
-                <ShareDashboardButton
-                  layoutPayload={layoutPayload}
-                  canonicalShare={canonicalShare}
-                />
-                <LayoutImportExport
-                  layoutPayload={layoutPayload}
-                  onImport={hydrateLayout}
-                />
+              </div>
+
+              <div className="min-w-0 rounded-3xl border border-white/10 bg-black/20 p-2 md:p-3">
+                <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/45 md:mb-2">
+                  <Share2 className="h-3.5 w-3.5" />
+                  Layout y compartir
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+                  {user ? (
+                    <SaveCombinationDialog layoutPayload={layoutPayload} />
+                  ) : (
+                    <Button asChild className="min-w-[11rem] flex-none">
+                      <Link href="/ingresar">Ingresar para guardar</Link>
+                    </Button>
+                  )}
+                  <ShareDashboardButton
+                    layoutPayload={layoutPayload}
+                    canonicalShare={canonicalShare}
+                  />
+                  <LayoutImportExport
+                    layoutPayload={layoutPayload}
+                    onImport={hydrateLayout}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              {GRID_PRESETS.map((option) => (
-                <Button
-                  key={option.id}
-                  variant={layoutPreset === option.id ? "default" : "secondary"}
-                  onClick={() => setPreset(option.id)}
-                >
-                  <LayoutGrid className="mr-2 h-4 w-4" />
-                  {option.name}
-                </Button>
-              ))}
+            <div className="min-w-0 rounded-3xl border border-white/10 bg-black/20 p-2 md:p-3">
+              <div className="mb-1 flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/45 md:mb-2">
+                <LayoutGrid className="h-3.5 w-3.5" />
+                Grilla
+              </div>
+              <div
+                className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0"
+                role="group"
+                aria-label="Presets de grilla"
+              >
+                {GRID_PRESETS.map((option) => (
+                  <Button
+                    key={option.id}
+                    size="sm"
+                    variant={layoutPreset === option.id ? "default" : "secondary"}
+                    className="h-9 min-w-[5.5rem] px-3 leading-tight"
+                    onClick={() => setPreset(option.id)}
+                    aria-pressed={layoutPreset === option.id}
+                  >
+                    {option.name}
+                  </Button>
+                ))}
+              </div>
             </div>
 
             {tickerEnabled ? (

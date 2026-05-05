@@ -9,11 +9,13 @@ export type WakeLockState = {
 };
 
 export function useWakeLock(): WakeLockState {
-  const isSupported =
-    typeof navigator !== "undefined" && "wakeLock" in navigator;
-
   const [isActive, setIsActive] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
   const sentinelRef = useRef<WakeLockSentinel | null>(null);
+
+  useEffect(() => {
+    setIsSupported("wakeLock" in navigator);
+  }, []);
 
   const release = useCallback(async () => {
     if (sentinelRef.current) {
