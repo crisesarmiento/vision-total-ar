@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { deleteCombination } from "@/actions/combinations";
 import { Button } from "@/components/ui/button";
@@ -26,24 +26,28 @@ export function DeleteCombinationButton({
   combinationName,
 }: DeleteCombinationButtonProps) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleDelete = () => {
     startTransition(async () => {
       try {
         await deleteCombination(combinationId);
-        toast.success("Combinación eliminada");
+        toast.success("Combinación eliminada.");
+        setOpen(false);
         router.refresh();
       } catch (error) {
         toast.error(
-          error instanceof Error ? error.message : "No se pudo eliminar la combinación",
+          error instanceof Error
+            ? error.message
+            : "No se pudo eliminar la combinación.",
         );
       }
     });
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={(nextOpen) => !isPending && setOpen(nextOpen)}>
       <DialogTrigger asChild>
         <Button type="button" variant="destructive">
           Eliminar
@@ -63,7 +67,14 @@ export function DeleteCombinationButton({
               Cancelar
             </Button>
           </DialogClose>
-          <Button type="button" variant="destructive" onClick={handleDelete} disabled={isPending}>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isPending}
+            aria-busy={isPending}
+            className="min-w-28"
+          >
             {isPending ? "Eliminando..." : "Eliminar"}
           </Button>
         </DialogFooter>

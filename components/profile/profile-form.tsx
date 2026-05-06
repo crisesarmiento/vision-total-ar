@@ -24,6 +24,8 @@ export function ProfileForm({
   const [name, setName] = useState(initialName);
   const [image, setImage] = useState(initialImage ?? "");
   const [isPending, startTransition] = useTransition();
+  const trimmedName = name.trim();
+  const canSave = trimmedName.length >= 2 && !isPending;
 
   return (
     <Card>
@@ -51,26 +53,38 @@ export function ProfileForm({
             id="profile-name"
             value={name}
             onChange={(event) => setName(event.target.value)}
+            disabled={isPending}
           />
+          {trimmedName.length < 2 ? (
+            <p className="text-xs text-white/50">Usá al menos 2 caracteres.</p>
+          ) : null}
         </div>
 
         <Button
-          onClick={() =>
+          type="button"
+          onClick={() => {
+            if (!canSave) {
+              toast.error("El nombre visible necesita al menos 2 caracteres.");
+              return;
+            }
+
             startTransition(async () => {
               try {
                 await updateProfile({
-                  name,
+                  name: trimmedName,
                   image,
                 });
-                toast.success("Perfil actualizado");
+                toast.success("Perfil actualizado.");
               } catch (error) {
                 toast.error(
-                  error instanceof Error ? error.message : "No se pudo guardar el perfil",
+                  error instanceof Error ? error.message : "No se pudo guardar el perfil.",
                 );
               }
-            })
-          }
-          disabled={isPending}
+            });
+          }}
+          disabled={!canSave}
+          aria-busy={isPending}
+          className="min-w-36"
         >
           {isPending ? "Guardando..." : "Guardar perfil"}
         </Button>

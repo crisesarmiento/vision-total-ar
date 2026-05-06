@@ -48,6 +48,7 @@ export function SettingsForm(props: SettingsFormProps) {
             id="theme"
             className={selectClassName}
             value={values.initialTheme}
+            disabled={isPending}
             onChange={(event) =>
               setValues((current) => ({
                 ...current,
@@ -67,6 +68,7 @@ export function SettingsForm(props: SettingsFormProps) {
             id="grid-preset"
             className={selectClassName}
             value={values.defaultGridPreset}
+            disabled={isPending}
             onChange={(event) =>
               setValues((current) => ({
                 ...current,
@@ -120,6 +122,7 @@ export function SettingsForm(props: SettingsFormProps) {
               <Switch
                 id={id}
                 checked={Boolean(values[item.key as keyof SettingsFormProps])}
+                disabled={isPending}
                 onCheckedChange={(checked) =>
                   setValues((current) => ({
                     ...current,
@@ -143,15 +146,19 @@ export function SettingsForm(props: SettingsFormProps) {
                   reducedMotion: values.reducedMotion,
                   defaultGridPreset: values.defaultGridPreset,
                 });
-                toast.success("Preferencias guardadas");
+                toast.success("Preferencias guardadas.");
               } catch (error) {
                 toast.error(
-                  error instanceof Error ? error.message : "No se pudieron guardar las preferencias",
+                  error instanceof Error
+                    ? error.message
+                    : "No se pudieron guardar las preferencias.",
                 );
               }
             })
           }
           disabled={isPending}
+          aria-busy={isPending}
+          className="min-w-44"
         >
           {isPending ? "Guardando..." : "Guardar preferencias"}
         </Button>

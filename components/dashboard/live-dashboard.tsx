@@ -12,6 +12,7 @@ import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeftRight,
+  AlertCircle,
   CheckCircle2,
   Command,
   Library,
@@ -86,6 +87,8 @@ const CHANNEL_CATEGORY_LABELS = {
   tv: "TV",
   deportes: "Deportes",
 } as const;
+
+type LayoutSaveStatus = "idle" | "saving" | "saved" | "error";
 
 type LiveDashboardProps = {
   user: DashboardUser | null;
@@ -175,6 +178,8 @@ export function LiveDashboard({
     slotId: string;
     channelName: string;
   } | null>(null);
+  const [layoutSaveStatus, setLayoutSaveStatus] = useState<LayoutSaveStatus>("idle");
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const hasAppliedInitialLayout = useRef(false);
   const sidebarOpenButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -184,6 +189,7 @@ export function LiveDashboard({
   const queuedLayout = useRef<DashboardLayout | null>(null);
   const queuedLayoutKey = useRef<string | null>(null);
   const isSavingLayout = useRef(false);
+  const layoutSaveErrorNotified = useRef(false);
   const {
     focusedPlayerId,
     focusPlayer,
@@ -313,6 +319,18 @@ export function LiveDashboard({
   }, [assignmentFeedback]);
 
   useEffect(() => {
+    if (layoutSaveStatus !== "saved") {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setLayoutSaveStatus("idle");
+    }, 2_500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [layoutSaveStatus]);
+
+  useEffect(() => {
     if (hasAppliedInitialLayout.current) {
       return;
     }
@@ -411,14 +429,26 @@ export function LiveDashboard({
             const nextLayoutKey = queuedLayoutKey.current;
 
             try {
+              setLayoutSaveStatus("saving");
               await persistLayoutPreference(nextLayout.preset, nextLayout);
               lastSavedLayout.current = nextLayoutKey;
+              layoutSaveErrorNotified.current = false;
+              setLayoutSaveStatus("saved");
 
               if (queuedLayoutKey.current === nextLayoutKey) {
                 queuedLayout.current = null;
                 queuedLayoutKey.current = null;
               }
             } catch {
+              setLayoutSaveStatus("error");
+
+              if (!layoutSaveErrorNotified.current) {
+                toast.error(
+                  "No se pudieron guardar los cambios de grilla. Reintentamos en segundo plano.",
+                );
+                layoutSaveErrorNotified.current = true;
+              }
+
               await new Promise((resolve) => window.setTimeout(resolve, 5_000));
             }
           }
@@ -487,13 +517,24 @@ export function LiveDashboard({
       return;
     }
 
+    setPendingFavoriteId(channelId);
+
     startTransition(async () => {
-      const nextValue = await toggleFavoriteChannel(channelId);
-      setFavoriteIds((current) =>
-        nextValue
-          ? [...current, channelId]
-          : current.filter((value) => value !== channelId),
-      );
+      try {
+        const nextValue = await toggleFavoriteChannel(channelId);
+        setFavoriteIds((current) =>
+          nextValue
+            ? [...current, channelId]
+            : current.filter((value) => value !== channelId),
+        );
+        toast.success(
+          nextValue ? "Señal agregada a favoritos." : "Señal quitada de favoritos.",
+        );
+      } catch {
+        toast.error("No se pudo actualizar el favorito.");
+      } finally {
+        setPendingFavoriteId(null);
+      }
     });
   };
 
@@ -670,6 +711,7 @@ export function LiveDashboard({
                             className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-white/60 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             onClick={() => toggleFavorite(channel.id)}
                             disabled={isPending}
+                            aria-busy={pendingFavoriteId === channel.id}
                             aria-label={
                               isFavorite
                                 ? `Quitar ${channel.name} de favoritos`
@@ -760,6 +802,27 @@ export function LiveDashboard({
                     >
                       <CheckCircle2 className="h-4 w-4" />
                       {assignmentFeedback.channelName} asignado a {assignmentFeedbackTarget}
+                    </p>
+                  ) : null}
+                  {user && layoutSaveStatus !== "idle" ? (
+                    <p
+                      className={cn(
+                        "mt-2 flex items-center gap-2 text-sm",
+                        layoutSaveStatus === "error" ? "text-amber-200" : "text-white/55",
+                      )}
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {layoutSaveStatus === "error" ? (
+                        <AlertCircle className="h-4 w-4" />
+                      ) : (
+                        <CheckCircle2 className="h-4 w-4" />
+                      )}
+                      {layoutSaveStatus === "saving"
+                        ? "Guardando cambios de grilla..."
+                        : layoutSaveStatus === "saved"
+                          ? "Grilla guardada"
+                          : "Reintentando guardado de grilla"}
                     </p>
                   ) : null}
                 </div>

@@ -31,11 +31,11 @@ export function AvatarUploader({ onUploaded, disabled }: AvatarUploaderProps) {
 
         if (file?.ufsUrl) {
           onUploaded(file.ufsUrl);
-          toast.success("Avatar cargado");
+          toast.success("Avatar cargado. Guardá el perfil para aplicarlo.");
         }
       }}
-      onUploadError={(error) => {
-        toast.error(error.message);
+      onUploadError={() => {
+        toast.error("No se pudo cargar el avatar.");
       }}
       disabled={disabled}
     />
