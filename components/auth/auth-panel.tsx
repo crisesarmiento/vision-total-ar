@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Library, MonitorPlay } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -91,8 +92,8 @@ export function AuthPanel({ mode }: AuthPanelProps) {
         <CardTitle>{isSignUp ? "Crear cuenta" : "Ingresar"}</CardTitle>
         <CardDescription>
           {isSignUp
-            ? "Guardá tus combinaciones, favoritos y preferencias."
-            : "Volvé a tu dashboard multiview y seguí todas las señales."}
+            ? "Guardá grillas, favoritos y preferencias para retomar el monitoreo desde cualquier equipo."
+            : "Recuperá tus combinaciones guardadas, favoritos y ajustes personales."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -142,6 +143,17 @@ export function AuthPanel({ mode }: AuthPanelProps) {
         >
           Continuar con Google
         </Button>
+        <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/60">
+          <div className="flex items-center gap-2 font-medium text-white/80">
+            {isSignUp ? <Library className="h-4 w-4" /> : <MonitorPlay className="h-4 w-4" />}
+            {isSignUp ? "Tu biblioteca queda lista" : "Volvés directo al dashboard"}
+          </div>
+          <p className="mt-1">
+            {isSignUp
+              ? "Después podés guardar combinaciones públicas o privadas sin cambiar la grilla actual."
+              : "Si todavía no guardaste una grilla, podés entrar y crearla desde el dashboard."}
+          </p>
+        </div>
         <p className="text-sm text-white/60">
           {isSignUp ? "¿Ya tenés cuenta?" : "¿Todavía no tenés cuenta?"}{" "}
           <Link href={isSignUp ? "/ingresar" : "/registrarse"} className="text-primary hover:underline">

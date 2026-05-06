@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { MonitorPlay, SlidersHorizontal } from "lucide-react";
 import { SettingsForm } from "@/components/profile/settings-form";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { requireSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
@@ -22,9 +24,28 @@ export default async function SettingsPage() {
           <h1 className="mt-2 text-3xl font-semibold leading-tight">Configuración personal</h1>
         </div>
         <Button asChild variant="outline">
-          <Link href="/">Volver al dashboard</Link>
+          <Link href="/">
+            <MonitorPlay className="h-4 w-4" />
+            Volver al dashboard
+          </Link>
         </Button>
       </div>
+
+      {!preferences ? (
+        <Card className="mb-6 border-white/10 bg-black/20">
+          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-start">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5">
+              <SlidersHorizontal className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="font-medium">Estás usando la configuración inicial.</p>
+              <p className="mt-1 text-sm text-white/60">
+                Ajustá tema, ticker, atajos o grilla predeterminada y guardá para que se apliquen a tu cuenta.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <SettingsForm
         initialTheme={preferences?.theme ?? "SYSTEM"}
