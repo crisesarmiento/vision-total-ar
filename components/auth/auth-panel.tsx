@@ -15,9 +15,12 @@ type AuthPanelProps = {
   mode: "signin" | "signup";
 };
 
+type PendingAction = "email" | "magic" | "google" | null;
+
 export function AuthPanel({ mode }: AuthPanelProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,6 +28,8 @@ export function AuthPanel({ mode }: AuthPanelProps) {
   const isSignUp = mode === "signup";
 
   const submit = () => {
+    setPendingAction("email");
+
     startTransition(async () => {
       try {
         if (isSignUp) {
@@ -53,12 +58,20 @@ export function AuthPanel({ mode }: AuthPanelProps) {
         router.push("/");
         router.refresh();
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "No se pudo completar la autenticación");
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "No se pudo completar la autenticación.",
+        );
+      } finally {
+        setPendingAction(null);
       }
     });
   };
 
   const sendMagicLink = () => {
+    setPendingAction("magic");
+
     startTransition(async () => {
       try {
         const result = await authClient.signIn.magicLink({
@@ -72,17 +85,28 @@ export function AuthPanel({ mode }: AuthPanelProps) {
 
         toast.success("Revisá tu correo para completar el ingreso.");
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "No se pudo enviar el magic link");
+        toast.error(
+          error instanceof Error ? error.message : "No se pudo enviar el magic link.",
+        );
+      } finally {
+        setPendingAction(null);
       }
     });
   };
 
   const signInWithGoogle = () => {
+    setPendingAction("google");
+
     startTransition(async () => {
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/",
-      });
+      try {
+        await authClient.signIn.social({
+          provider: "google",
+          callbackURL: "/",
+        });
+      } catch {
+        toast.error("No se pudo iniciar el ingreso con Google.");
+        setPendingAction(null);
+      }
     });
   };
 
@@ -100,7 +124,12 @@ export function AuthPanel({ mode }: AuthPanelProps) {
         {isSignUp ? (
           <div className="space-y-2">
             <Label htmlFor="name">Nombre</Label>
-            <Input id="name" value={name} onChange={(event) => setName(event.target.value)} />
+            <Input
+              id="name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              disabled={isPending}
+            />
           </div>
         ) : null}
         <div className="space-y-2">
@@ -110,6 +139,7 @@ export function AuthPanel({ mode }: AuthPanelProps) {
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
+            disabled={isPending}
           />
         </div>
         <div className="space-y-2">
@@ -119,19 +149,34 @@ export function AuthPanel({ mode }: AuthPanelProps) {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            disabled={isPending}
           />
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
-          <Button type="button" onClick={submit} disabled={isPending}>
-            {isPending ? "Procesando..." : isSignUp ? "Crear cuenta" : "Ingresar"}
+          <Button
+            type="button"
+            onClick={submit}
+            disabled={isPending}
+            aria-busy={pendingAction === "email"}
+            className="min-w-32"
+          >
+            {pendingAction === "email"
+              ? isSignUp
+                ? "Creando..."
+                : "Ingresando..."
+              : isSignUp
+                ? "Crear cuenta"
+                : "Ingresar"}
           </Button>
           <Button
             type="button"
             variant="secondary"
             onClick={sendMagicLink}
             disabled={isPending || !email}
+            aria-busy={pendingAction === "magic"}
+            className="min-w-40"
           >
-            Enviar magic link
+            {pendingAction === "magic" ? "Enviando..." : "Enviar magic link"}
           </Button>
         </div>
         <Button
@@ -140,8 +185,9 @@ export function AuthPanel({ mode }: AuthPanelProps) {
           className="w-full"
           onClick={signInWithGoogle}
           disabled={isPending}
+          aria-busy={pendingAction === "google"}
         >
-          Continuar con Google
+          {pendingAction === "google" ? "Conectando..." : "Continuar con Google"}
         </Button>
         <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-sm text-white/60">
           <div className="flex items-center gap-2 font-medium text-white/80">

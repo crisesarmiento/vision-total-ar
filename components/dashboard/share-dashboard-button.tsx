@@ -39,7 +39,7 @@ export function ShareDashboardButton({
       if (navigator.share) {
         try {
           await navigator.share(shareData);
-          toast.success("Enlace compartido");
+          toast.success("Enlace compartido.");
           return;
         } catch (error) {
           if (error instanceof DOMException && error.name === "AbortError") {
@@ -49,7 +49,7 @@ export function ShareDashboardButton({
       }
 
       await navigator.clipboard.writeText(url);
-      toast.success("Enlace copiado");
+      toast.success("Enlace copiado.");
     } catch {
       toast.error("No se pudo compartir la grilla.");
     } finally {
@@ -63,7 +63,9 @@ export function ShareDashboardButton({
       variant="secondary"
       onClick={handleShare}
       disabled={isPending}
+      aria-busy={isPending}
       aria-label="Compartir grilla actual"
+      className="min-w-32"
     >
       <Share2 className="h-4 w-4" />
       {isPending ? "Compartiendo..." : "Compartir"}

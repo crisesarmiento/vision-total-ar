@@ -32,7 +32,7 @@ export function ForkCombinationButton({ combinationId }: ForkCombinationButtonPr
   return (
     <Button type="button" disabled={isPending} onClick={handleClick}>
       <BookmarkPlus className="h-4 w-4" />
-      {isPending ? "Guardando…" : "Guardar en mis combinaciones"}
+      {isPending ? "Guardando..." : "Guardar en mis combinaciones"}
     </Button>
   );
 }
