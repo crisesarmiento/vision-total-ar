@@ -39,6 +39,7 @@ model User {
   preferences        UserPreference?
   savedCombinations  SavedCombination[]
   favoriteChannels   FavoriteChannel[]
+  favoriteCombinations FavoritedCombination[]
   recentCombinations RecentCombination[]
   channelAnalytics   ChannelAnalytics[]
 
@@ -111,18 +112,19 @@ model UserPreference {
 }
 
 model SavedCombination {
-  id            String                @id @default(cuid())
-  publicSlug    String                @unique @default(cuid())
-  ownerId       String
-  owner         User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  name          String
-  description   String?
-  layoutJson    Json
-  visibility    CombinationVisibility @default(PRIVATE)
-  favoritesCount Int                  @default(0)
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
-  recentUses    RecentCombination[]
+  id                   String                 @id @default(cuid())
+  publicSlug           String                 @unique @default(cuid())
+  ownerId              String
+  owner                User                   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name                 String
+  description          String?
+  layoutJson           Json
+  visibility           CombinationVisibility  @default(PRIVATE)
+  favoritesCount       Int                    @default(0)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  recentUses           RecentCombination[]
+  favoritedCombinations FavoritedCombination[]
 
   @@index([ownerId, updatedAt])
   @@index([visibility, favoritesCount])
@@ -139,6 +141,20 @@ model FavoriteChannel {
   @@unique([userId, channelId])
   @@index([userId])
   @@map("favorite_channel")
+}
+
+model FavoritedCombination {
+  id            String           @id @default(cuid())
+  userId        String
+  combinationId String
+  createdAt     DateTime         @default(now())
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  combination   SavedCombination @relation(fields: [combinationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, combinationId])
+  @@index([userId])
+  @@index([combinationId])
+  @@map("favorited_combination")
 }
 
 model RecentCombination {

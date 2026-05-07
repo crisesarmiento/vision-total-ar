@@ -1,4 +1,6 @@
 import { LiveDashboard } from "@/components/dashboard/live-dashboard";
+import { parseDashboardLayout } from "@/lib/dashboard-layout";
+import { fromStoredGridPreset, type StoredGridPreset } from "@/lib/layout-presets";
 import { prisma } from "@/lib/prisma";
 import { getTickerItems } from "@/lib/rss";
 import { getSession } from "@/lib/session";
@@ -14,13 +16,19 @@ type FeaturedCombination = {
   favoritesCount: number;
 };
 
-export default async function Home() {
-  const [session, featuredCombinations, liveSnapshots, tickerItems]: [
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ combo?: string }>;
+}) {
+  const [{ combo }, session, featuredCombinations, liveSnapshots, tickerItems]: [
+    Awaited<typeof searchParams>,
     Awaited<ReturnType<typeof getSession>>,
     FeaturedCombination[],
     Awaited<ReturnType<typeof getLiveSnapshots>>,
     Awaited<ReturnType<typeof getTickerItems>>,
   ] = await Promise.all([
+    searchParams,
     getSession(),
     prisma.savedCombination.findMany({
       where: {
@@ -40,32 +48,69 @@ export default async function Home() {
     getTickerItems(),
   ]);
 
-  const favoriteChannels: Array<{ channelId: string }> = session
-    ? await prisma.favoriteChannel.findMany({
-        where: {
-          userId: session.user.id,
-        },
-        select: {
-          channelId: true,
-        },
-      })
-    : [];
+  const [favoriteChannels, userPreference, selectedCombination]: [
+    Array<{ channelId: string }>,
+    {
+      defaultGridPreset: StoredGridPreset;
+      defaultLayoutJson: unknown;
+    } | null,
+    { layoutJson: unknown } | null,
+  ] = await Promise.all([
+    session
+      ? prisma.favoriteChannel.findMany({
+          where: {
+            userId: session.user.id,
+          },
+          select: {
+            channelId: true,
+          },
+        })
+      : Promise.resolve([]),
+    session
+      ? prisma.userPreference.findUnique({
+          where: {
+            userId: session.user.id,
+          },
+          select: {
+            defaultGridPreset: true,
+            defaultLayoutJson: true,
+          },
+        })
+      : Promise.resolve(null),
+    combo
+      ? prisma.savedCombination.findFirst({
+          where: {
+            publicSlug: combo,
+            visibility: "PUBLIC",
+          },
+          select: {
+            layoutJson: true,
+          },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  const initialLayout = parseDashboardLayout(userPreference?.defaultLayoutJson ?? null);
+  const comboLayout = parseDashboardLayout(selectedCombination?.layoutJson ?? null);
+
+  const user = session
+    ? {
+        id: session.user.id,
+        name: session.user.name,
+        image: session.user.image,
+      }
+    : null;
 
   return (
     <LiveDashboard
-      user={
-        session
-          ? {
-              id: session.user.id,
-              name: session.user.name,
-              image: session.user.image,
-            }
-          : null
-      }
+      user={user}
       featuredCombinations={featuredCombinations}
       favoriteChannelIds={favoriteChannels.map((item) => item.channelId)}
       initialLiveSnapshots={liveSnapshots}
       initialTickerItems={tickerItems}
+      initialPreset={fromStoredGridPreset(userPreference?.defaultGridPreset)}
+      initialLayout={initialLayout}
+      comboLayout={comboLayout}
     />
   );
 }

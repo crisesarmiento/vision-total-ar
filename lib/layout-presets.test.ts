@@ -1,15 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { GRID_PRESETS, getPresetById } from "./layout-presets";
+import { fromStoredGridPreset, toStoredGridPreset } from "./layout-presets";
 
-describe("layout presets", () => {
-  it("returns the recommended default preset when the requested one is missing", () => {
-    expect(getPresetById("custom")).toEqual(GRID_PRESETS[2]);
+describe("fromStoredGridPreset", () => {
+  it("falls back to 2x2 when no stored preset exists", () => {
+    expect(fromStoredGridPreset(null)).toBe("2x2");
+    expect(fromStoredGridPreset(undefined)).toBe("2x2");
   });
 
-  it("keeps the 4x4 preset capped to 12 players", () => {
-    const preset = getPresetById("4x4");
+  it("normalizes CUSTOM to the supported default preset", () => {
+    expect(fromStoredGridPreset("CUSTOM")).toBe("2x2");
+  });
 
-    expect(preset.maxPlayers).toBe(12);
-    expect(preset.columns).toBe(4);
+  it("maps stored presets back to dashboard presets", () => {
+    expect(fromStoredGridPreset("GRID_1")).toBe("1x1");
+    expect(fromStoredGridPreset("GRID_2X1")).toBe("2x1");
+    expect(fromStoredGridPreset("GRID_2X2")).toBe("2x2");
+    expect(fromStoredGridPreset("GRID_3X3")).toBe("3x3");
+    expect(fromStoredGridPreset("GRID_4X4")).toBe("4x4");
+  });
+
+  it("stores election mode as CUSTOM so persisted layouts still round-trip", () => {
+    expect(toStoredGridPreset("elecciones")).toBe("CUSTOM");
   });
 });

@@ -1,15 +1,11 @@
 "use client";
 
 import { create } from "zustand";
+import type { DashboardLayout, DashboardPlayerTile } from "@/lib/dashboard-layout";
 import { DEFAULT_CHANNEL_IDS } from "@/lib/channels";
 import { GRID_PRESETS, type LayoutPresetId } from "@/lib/layout-presets";
 
-export type PlayerTile = {
-  slotId: string;
-  channelId: string;
-  muted: boolean;
-  volume: number;
-};
+export type PlayerTile = DashboardPlayerTile;
 
 type DashboardState = {
   layoutPreset: LayoutPresetId;
@@ -17,6 +13,7 @@ type DashboardState = {
   globalMuted: boolean;
   focusedPlayerId: string | null;
   setPreset: (preset: LayoutPresetId) => void;
+  hydrateLayout: (layout: DashboardLayout) => void;
   reorderPlayers: (activeId: string, overId: string) => void;
   setChannel: (slotId: string, channelId: string) => void;
   toggleMute: (slotId: string) => void;
@@ -25,6 +22,8 @@ type DashboardState = {
   focusPlayer: (slotId: string | null) => void;
 };
 
+const ELECTION_CHANNEL_IDS = ["tn", "c5n", "lnmas", "a24", "canal26", "cronica"] as const;
+
 function makePlayers(maxPlayers: number) {
   return Array.from({ length: maxPlayers }, (_, index) => ({
     slotId: `slot-${index + 1}`,
@@ -32,6 +31,40 @@ function makePlayers(maxPlayers: number) {
     muted: true,
     volume: index === 0 ? 35 : 0,
   }));
+}
+
+function makePlayer(slot: number) {
+  return {
+    slotId: `slot-${slot}`,
+    channelId: DEFAULT_CHANNEL_IDS[(slot - 1) % DEFAULT_CHANNEL_IDS.length],
+    muted: true,
+    volume: slot === 1 ? 35 : 0,
+  };
+}
+
+function makePlayersFromChannels(channelIds: readonly string[]) {
+  return channelIds.map((channelId, index) => ({
+    slotId: `slot-${index + 1}`,
+    channelId,
+    muted: true,
+    volume: index === 0 ? 35 : 0,
+  }));
+}
+
+function fillPlayersToCapacity(players: PlayerTile[], maxPlayers: number) {
+  const preservedPlayers = players.slice(0, maxPlayers);
+  const usedSlotIds = new Set(preservedPlayers.map((player) => player.slotId));
+  const remainingSlots = maxPlayers - preservedPlayers.length;
+  const seededPlayers =
+    remainingSlots > 0
+      ? Array.from({ length: maxPlayers }, (_, index) => index + 1)
+          .map((slot) => `slot-${slot}`)
+          .filter((slotId) => !usedSlotIds.has(slotId))
+          .slice(0, remainingSlots)
+          .map((slotId) => makePlayer(Number(slotId.replace("slot-", ""))))
+      : [];
+
+  return [...preservedPlayers, ...seededPlayers];
 }
 
 function move<T>(items: T[], fromIndex: number, toIndex: number) {
@@ -47,16 +80,28 @@ export const useDashboardStore = create<DashboardState>((set) => ({
   globalMuted: true,
   focusedPlayerId: null,
   setPreset: (preset) =>
-    set(() => {
+    set((state) => {
       const config = GRID_PRESETS.find((item) => item.id === preset) ?? GRID_PRESETS[2];
-      const seededPlayers = makePlayers(config.maxPlayers);
+      const players =
+        preset === "elecciones"
+          ? makePlayersFromChannels(ELECTION_CHANNEL_IDS)
+          : fillPlayersToCapacity(state.players, config.maxPlayers);
 
       return {
         layoutPreset: preset,
-        players:
-          preset === "custom"
-            ? seededPlayers
-            : seededPlayers.slice(0, Math.min(12, config.maxPlayers)),
+        players,
+      };
+    }),
+  hydrateLayout: (layout) =>
+    set(() => {
+      const config = GRID_PRESETS.find((item) => item.id === layout.preset) ?? GRID_PRESETS[2];
+      const players = fillPlayersToCapacity(layout.players, config.maxPlayers);
+
+      return {
+        layoutPreset: layout.preset,
+        players,
+        globalMuted: players.every((player) => player.muted),
+        focusedPlayerId: null,
       };
     }),
   reorderPlayers: (activeId, overId) =>
