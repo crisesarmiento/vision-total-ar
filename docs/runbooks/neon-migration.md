@@ -39,6 +39,18 @@ If preview or production fails after the switch:
 2. Trigger a fresh deployment.
 3. Re-run homepage and auth verification.
 
+## Pull request preview branches
+
+The `.github/workflows/neon-preview-branches.yml` workflow manages Neon branch lifecycle for internal pull requests:
+
+- On PR open, reopen, or synchronize, it creates or reuses a Neon branch named `preview/pr-<number>-<branch>`.
+- On PR close, it deletes the matching Neon branch.
+- Preview branches expire automatically after 14 days.
+- The workflow uses the repository `NEON_PROJECT_ID` variable and `NEON_API_KEY` secret created by the Neon GitHub integration.
+- Fork PRs are skipped so GitHub Actions does not try to access Neon secrets from untrusted pull requests.
+
+This workflow does not inject `DATABASE_URL` or `PRISMA_DIRECT_TCP_URL` into Vercel preview deployments. Until a follow-up wires Vercel previews to the generated branch connection string, Vercel previews continue using their existing environment configuration.
+
 ## Repo changes included with this runbook
 
 - Prisma runtime no longer depends on `@prisma/adapter-ppg`.

@@ -186,3 +186,21 @@ model ChannelAnalytics {
   @@index([userId, sessionsCount])
   @@map("channel_analytics")
 }
+
+/// Tracks estimated YouTube Data API v3 quota consumption per UTC calendar day.
+/// Used to trigger graceful degradation before the daily quota is exhausted.
+///
+/// Operator-tunable thresholds (env vars, no code change needed):
+///   YOUTUBE_QUOTA_BUDGET  — daily hard limit to degrade at (default 9000)
+///   YOUTUBE_QUOTA_WARNING — soft warning threshold (default 7500)
+model QuotaUsage {
+  id        String   @id @default(cuid())
+  /// UTC calendar date in YYYY-MM-DD format.
+  date      String
+  /// Cumulative estimated units consumed on this date.
+  units     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([date])
+  @@map("quota_usage")
+}

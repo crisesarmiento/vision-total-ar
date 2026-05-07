@@ -1,8 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { saveCombination } from "@/actions/combinations";
+import type { DashboardLayout } from "@/lib/dashboard-layout";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 type SaveCombinationDialogProps = {
-  layoutPayload: unknown;
+  layoutPayload: DashboardLayout;
   triggerLabel?: string;
 };
 
@@ -26,12 +27,13 @@ export function SaveCombinationDialog({
   layoutPayload,
   triggerLabel = "Guardar combinación",
 }: SaveCombinationDialogProps) {
+  const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={(nextOpen) => !isPending && setOpen(nextOpen)}>
       <DialogTrigger asChild>
-        <Button>{triggerLabel}</Button>
+        <Button aria-label={triggerLabel}>{triggerLabel}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -57,10 +59,13 @@ export function SaveCombinationDialog({
                     visibility === "PUBLIC" ? "PUBLIC" : "PRIVATE",
                   layoutJson: layoutPayload,
                 });
-                toast.success("Combinación guardada");
+                toast.success("Combinación guardada.");
+                setOpen(false);
               } catch (error) {
                 toast.error(
-                  error instanceof Error ? error.message : "No se pudo guardar la combinación",
+                  error instanceof Error
+                    ? error.message
+                    : "No se pudo guardar la combinación.",
                 );
               }
             });
@@ -68,7 +73,13 @@ export function SaveCombinationDialog({
         >
           <div className="space-y-2">
             <Label htmlFor="combo-name">Nombre</Label>
-            <Input id="combo-name" name="name" placeholder="Debate nocturno" required />
+            <Input
+              id="combo-name"
+              name="name"
+              placeholder="Debate nocturno"
+              required
+              disabled={isPending}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="combo-description">Descripción</Label>
@@ -76,6 +87,7 @@ export function SaveCombinationDialog({
               id="combo-description"
               name="description"
               placeholder="Seguimiento de política, economía y streaming alternativo."
+              disabled={isPending}
             />
           </div>
           <div className="space-y-2">
@@ -85,13 +97,14 @@ export function SaveCombinationDialog({
               name="visibility"
               className="flex h-10 w-full rounded-2xl border border-white/10 bg-black/20 px-4 text-sm"
               defaultValue="PRIVATE"
+              disabled={isPending}
             >
               <option value="PRIVATE">Privada</option>
               <option value="PUBLIC">Pública</option>
             </select>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} aria-busy={isPending} className="min-w-28">
               {isPending ? "Guardando..." : "Guardar"}
             </Button>
           </DialogFooter>

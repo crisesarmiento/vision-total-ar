@@ -192,4 +192,76 @@ describe("dashboard store setPreset", () => {
       "cronica",
     ]);
   });
+
+  it("reseeds deportes mode with the four sports channels", () => {
+    useDashboardStore.setState({
+      layoutPreset: "2x2",
+      players: [
+        makePlayer(1, "tn"),
+        makePlayer(2, "c5n"),
+        makePlayer(3, "lnmas"),
+        makePlayer(4, "a24"),
+      ],
+    });
+
+    useDashboardStore.getState().setPreset("deportes");
+
+    expect(useDashboardStore.getState().players).toEqual([
+      { slotId: "slot-1", channelId: "tycsports", muted: true, volume: 35 },
+      { slotId: "slot-2", channelId: "tnt-sports-ar", muted: true, volume: 0 },
+      { slotId: "slot-3", channelId: "fox-sports-ar", muted: true, volume: 0 },
+      { slotId: "slot-4", channelId: "tycsports", muted: true, volume: 0 },
+    ]);
+  });
+
+  it("reseeds deportes mode when switching away and back", () => {
+    useDashboardStore.getState().setPreset("deportes");
+    useDashboardStore.getState().setChannel("slot-1", "tn");
+    useDashboardStore.getState().setPreset("2x2");
+
+    useDashboardStore.getState().setPreset("deportes");
+
+    expect(useDashboardStore.getState().players.map((player) => player.channelId)).toEqual([
+      "tycsports",
+      "tnt-sports-ar",
+      "fox-sports-ar",
+      "tycsports",
+    ]);
+  });
+
+  it("reseeds federal mode with the four regional channels", () => {
+    useDashboardStore.setState({
+      layoutPreset: "2x2",
+      players: [
+        makePlayer(1, "tn"),
+        makePlayer(2, "c5n"),
+        makePlayer(3, "lnmas"),
+        makePlayer(4, "a24"),
+      ],
+    });
+
+    useDashboardStore.getState().setPreset("federal");
+
+    expect(useDashboardStore.getState().players).toEqual([
+      { slotId: "slot-1", channelId: "el-siete", muted: true, volume: 35 },
+      { slotId: "slot-2", channelId: "el-tres", muted: true, volume: 0 },
+      { slotId: "slot-3", channelId: "tvpublica", muted: true, volume: 0 },
+      { slotId: "slot-4", channelId: "canal-ciudad", muted: true, volume: 0 },
+    ]);
+  });
+
+  it("reseeds federal mode when switching away and back", () => {
+    useDashboardStore.getState().setPreset("federal");
+    useDashboardStore.getState().setChannel("slot-1", "tn");
+    useDashboardStore.getState().setPreset("2x2");
+
+    useDashboardStore.getState().setPreset("federal");
+
+    expect(useDashboardStore.getState().players.map((player) => player.channelId)).toEqual([
+      "el-siete",
+      "el-tres",
+      "tvpublica",
+      "canal-ciudad",
+    ]);
+  });
 });

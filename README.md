@@ -6,7 +6,7 @@ Vision AR es una plataforma premium de multiview para seguir todas las visiones 
 - Next.js 15 App Router + React 19
 - TypeScript strict
 - Tailwind CSS + componentes estilo shadcn/ui
-- Prisma ORM + Prisma Postgres
+- Prisma ORM + Neon/PostgreSQL
 - Better Auth
 - Zustand
 - TanStack Query
@@ -26,7 +26,41 @@ Vision AR es una plataforma premium de multiview para seguir todas las visiones 
 - Combinaciones guardadas, favoritas y página pública compartible
 - PWA, sitemap, robots, Open Graph e icon generado
 
+## Diseño
+- Convenciones de UI: [docs/design/vision-ui-conventions.md](docs/design/vision-ui-conventions.md)
+- Checklist de QA visual: [docs/design/visual-qa-checklist.md](docs/design/visual-qa-checklist.md)
+- Investigación de diseño asistido por IA: [docs/design/ai-design-research.md](docs/design/ai-design-research.md)
+- Desglose de tickets de Milestone 7: [docs/design/milestone-7-child-tickets.md](docs/design/milestone-7-child-tickets.md)
+
 ## Primeros pasos
+### Opción recomendada: Docker Compose
+1. Levantar PostgreSQL local, aplicar esquema, sembrar datos demo y arrancar Next.js:
+
+```bash
+docker compose up
+```
+
+La app queda disponible en `http://localhost:3000`.
+
+El contenedor usa PostgreSQL local con datos persistentes en un volumen Docker:
+- dentro de Compose: `db:5432`
+- desde el host: `localhost:5433`
+- el runtime de la app usa `DATABASE_DRIVER=pg`
+- dentro de Compose, `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` apuntan a `postgresql://vision_ar@db:5432/vision_total_ar`
+
+Usuario demo:
+- email: `demo@visionar.local`
+- password: el seed lo imprime al terminar. Podés sobrescribirlo con `SEED_DEMO_PASSWORD`.
+
+Para resetear completamente la base local sembrada:
+
+```bash
+docker compose down -v
+```
+
+Esta configuración de Docker Compose es solo para desarrollo local. Producción sigue desplegándose en Vercel.
+
+### Opción manual sin Docker
 1. Instalar dependencias:
 
 ```bash
@@ -41,9 +75,35 @@ cp .env.example .env
 
 3. Completar al menos:
 - `DATABASE_URL`
+- `DATABASE_DRIVER`
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL`
 - `NEXT_PUBLIC_APP_URL`
+
+Para desarrollo local contra PostgreSQL de Docker Compose desde el host, usá:
+
+```bash
+DATABASE_DRIVER=pg
+DATABASE_URL=postgresql://vision_ar@localhost:5433/vision_total_ar
+PRISMA_DIRECT_TCP_URL=
+```
+
+Podés validar que la combinación sea segura antes de arrancar la app:
+
+```bash
+npm run env:doctor
+```
+
+Si usás una base remota de Neon para desarrollo o preview, cambiá explícitamente a:
+
+```bash
+DATABASE_DRIVER=neon
+DATABASE_URL=<neon-runtime-url>
+PRISMA_DIRECT_TCP_URL=<neon-direct-url>
+```
+
+No mezcles `DATABASE_DRIVER=pg` con URLs remotas restringidas ni `DATABASE_DRIVER=neon` con el PostgreSQL local de Docker.
+Si tu `.env` todavía tiene hosts `db.prisma.io`, reemplazalos: pertenecen al proveedor anterior y el runtime local falla rápido para que el dashboard no quede bloqueado por una URL obsoleta.
 
 4. Generar Prisma Client:
 
@@ -57,7 +117,29 @@ npm run prisma:generate
 npm run prisma:migrate -- --name init
 ```
 
-6. Levantar el proyecto:
+6. Cargar datos demo locales:
+
+```bash
+npm run db:seed
+```
+
+Si estás usando una rama/base remota de Neon para desarrollo local, habilitá explícitamente el seed remoto:
+
+```bash
+DATABASE_SEED_ALLOW_REMOTE=true npm run db:seed
+```
+
+También podés generar Prisma Client, aplicar el esquema y sembrar datos con un solo comando:
+
+```bash
+npm run db:setup
+```
+
+Usuario demo:
+- email: `demo@visionar.local`
+- password: el seed lo imprime al terminar. Podés sobrescribirlo con `SEED_DEMO_PASSWORD`.
+
+7. Levantar el proyecto:
 
 ```bash
 npm run dev
@@ -65,7 +147,11 @@ npm run dev
 
 ## Variables de entorno
 ```bash
-DATABASE_URL=
+DATABASE_DRIVER=pg
+DATABASE_URL=postgresql://vision_ar@localhost:5433/vision_total_ar
+PRISMA_DIRECT_TCP_URL=
+DATABASE_SEED_ALLOW_REMOTE=false
+SEED_DEMO_PASSWORD=
 BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=
 NEXT_PUBLIC_APP_URL=
@@ -83,6 +169,8 @@ UPLOADTHING_APP_ID=
 ```bash
 npm run dev
 npm run lint
+npm run actions:lint
+npm run env:doctor
 npm run typecheck
 npm run test
 npm run build
@@ -91,15 +179,26 @@ npm run version:minor
 npm run version:major
 npm run prisma:generate
 npm run prisma:migrate
+npm run prisma:migrate:status
+npm run prisma:migrate:deploy
 npm run db:push
+npm run db:seed
+npm run db:setup
 npm run prisma:studio
 ```
 
 ## Prisma y base de datos
 - El proyecto usa Prisma 7 con `prisma.config.ts`.
 - `DATABASE_URL` se usa para Prisma CLI y migraciones.
-- El runtime usa `PrismaClient` con `@prisma/adapter-neon`.
-- Durante el cutover, el runtime prioriza `PRISMA_DIRECT_TCP_URL` para permitir una migración escalonada sin romper producción si `DATABASE_URL` todavía apunta al proveedor anterior.
+- El runtime usa `PrismaClient` con `DATABASE_DRIVER=pg` para PostgreSQL local y `DATABASE_DRIVER=neon` para Neon.
+- En `development`, `DATABASE_DRIVER` debe estar configurado explícitamente. Esto evita que un `.env` privado obsoleto elija el adaptador equivocado.
+- Con `DATABASE_DRIVER=pg`, el runtime prefiere `DATABASE_URL` y usa `PRISMA_DIRECT_TCP_URL` solo como fallback.
+- Con `DATABASE_DRIVER=neon`, el runtime prefiere `PRISMA_DIRECT_TCP_URL` y usa `DATABASE_URL` como fallback para mantener compatibilidad con el cutover.
+- `npm run env:doctor` muestra solo metadatos públicos de la configuración local, como driver, host, puerto y si la URL es local o remota. No imprime credenciales ni URLs completas.
+- Las URLs con host `db.prisma.io` se rechazan en runtime porque pertenecen a Prisma Postgres, el proveedor anterior. Usá PostgreSQL local con `DATABASE_DRIVER=pg` o URLs de Neon con `DATABASE_DRIVER=neon`.
+- Producción debe usar `npm run prisma:migrate:deploy`; no usar `db:push`, `prisma migrate dev` ni `db:seed` contra production.
+- El workflow manual `.github/workflows/production-db-migrations.yml` ejecuta `status` o `deploy` con el secret protegido `PRODUCTION_DATABASE_URL` del environment `Production`.
+- Durante el cutover con `DATABASE_DRIVER=neon`, el runtime prioriza `PRISMA_DIRECT_TCP_URL` para permitir una migración escalonada sin romper producción si `DATABASE_URL` todavía apunta al proveedor anterior.
 - Una vez completada la migración, la configuración objetivo es que `DATABASE_URL` y `PRISMA_DIRECT_TCP_URL` apunten ambas a Neon, y luego se puede simplificar el fallback legacy en un follow-up.
 
 ## Migración de Prisma Postgres a Neon
@@ -108,6 +207,7 @@ npm run prisma:studio
 - Migrar esquema y datos antes del cutover de producción.
 - Validar auth, homepage, combinaciones públicas, favoritos y preferencias después del cambio.
 - Documentar rollback antes de tocar production.
+- `npm run db:seed` se niega a correr en production y requiere `DATABASE_SEED_ALLOW_REMOTE=true` para bases no locales, incluyendo Neon preview/dev.
 
 ## Auth
 - Better Auth expone rutas en `app/api/auth/[...all]/route.ts`
@@ -119,6 +219,7 @@ npm run prisma:studio
 - `lib/channels.ts`: catálogo de señales
 - `lib/youtube.ts`: status y viewers en vivo con cache corto
 - `lib/rss.ts`: agregación del ticker
+- `docs/runbooks/rate-limiting.md`: límites repo-side para auth y polling, más nota operativa para Vercel WAF
 
 ## CI
 GitHub Actions ejecuta:
@@ -151,8 +252,9 @@ Archivos:
 6. Mergear a `develop`.
 7. Si la versión cambió, GitHub crea una prerelease `vX.Y.Z-rc.N`.
 8. Abrir release PR de `develop` hacia `main`.
-9. Al mergear a `main`, GitHub crea la release estable `vX.Y.Z`.
-10. Deploy de producción desde `main`.
+9. Revisar si hay cambios en `prisma/migrations` y correr el workflow `Production Database Migrations` con `status`; si hay migraciones pendientes, correr `deploy` antes del merge.
+10. Al mergear a `main`, GitHub crea la release estable `vX.Y.Z`.
+11. Deploy de producción desde `main`.
 
 ## Linear
 Proyecto creado:
@@ -189,19 +291,30 @@ Config recomendada:
 - Workflow repo-side: `.github/workflows/project-mirror.yml`
 - Script: `.github/scripts/sync-project-status.mjs`
 - Secretos requeridos:
-  - `GH_PROJECT_TOKEN`: token con permisos para actualizar el GitHub Project y leer el repo
+  - `GH_PROJECT_TOKEN`: secret de Actions con permisos para actualizar el GitHub Project y leer el repo
   - `LINEAR_API_KEY`: opcional pero recomendado para reflejar el estado real de Linear cuando exista un `CRIS-###` en issue, PR o branch
 - El workflow:
   - agrega issues y PRs al GitHub Project `Vision Total AR - Project`
   - refleja `Todo`, `In Progress`, `In Review` y `Done`
   - usa estado de Linear cuando puede resolver el issue ID
   - si no puede, cae a una heurística segura basada en el estado del issue/PR en GitHub
+  - omite PRs desde forks cuando no hay secretos disponibles
 
 ### Estrategia de milestones
 - Los milestones de GitHub representan releases, no ciclos de Linear.
 - Convención recomendada: `v0.1.0`, `v0.2.0`, etc.
 - Crear el milestone cuando se abre un release batch real desde `develop`.
 - No usar milestones para trabajo diario ni para reemplazar cycles de Linear.
+
+## Runbooks
+- [Migraciones de producción con Neon y Vercel](docs/runbooks/production-database-migrations.md)
+- [Migración de Prisma Postgres a Neon](docs/runbooks/neon-migration.md)
+
+## Agent skills
+- Repo-scoped public skills live in `.agents/skills`.
+- Public skill policy: [docs/skills/public-skill-policy.md](docs/skills/public-skill-policy.md)
+- Private maintainer skills setup: [docs/skills/private-skills.md](docs/skills/private-skills.md)
+- Validate public skills with `npm run skills:validate`.
 
 ## Versionado y releases
 - Fuente de verdad: `package.json`.

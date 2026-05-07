@@ -1,10 +1,20 @@
 import { LiveDashboard } from "@/components/dashboard/live-dashboard";
-import { parseDashboardLayout } from "@/lib/dashboard-layout";
+import {
+  decodeDashboardLayoutShareParam,
+  parseDashboardLayout,
+} from "@/lib/dashboard-layout";
 import { fromStoredGridPreset, type StoredGridPreset } from "@/lib/layout-presets";
 import { prisma } from "@/lib/prisma";
 import { getTickerItems } from "@/lib/rss";
 import { getSession } from "@/lib/session";
 import { getLiveSnapshots } from "@/lib/youtube";
+import { channels } from "@/lib/channels";
+import {
+  rankLiveChannels,
+  rankRelevantCombos,
+  type RankedChannel,
+  type RankedCombo,
+} from "@/lib/home/live-now";
 
 export const dynamic = "force-dynamic";
 
@@ -16,36 +26,59 @@ type FeaturedCombination = {
   favoritesCount: number;
 };
 
+type LiveNowComboCandidate = {
+  id: string;
+  publicSlug: string;
+  name: string;
+  description: string | null;
+  favoritesCount: number;
+  layoutJson: unknown;
+  updatedAt: Date;
+};
+
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ combo?: string }>;
+  searchParams: Promise<{ combo?: string; layout?: string }>;
 }) {
-  const [{ combo }, session, featuredCombinations, liveSnapshots, tickerItems]: [
+  const [{ combo, layout }, session, featuredCombinations, liveSnapshots, tickerItems, liveNowComboCandidates]: [
     Awaited<typeof searchParams>,
     Awaited<ReturnType<typeof getSession>>,
     FeaturedCombination[],
     Awaited<ReturnType<typeof getLiveSnapshots>>,
     Awaited<ReturnType<typeof getTickerItems>>,
+    LiveNowComboCandidate[],
   ] = await Promise.all([
     searchParams,
     getSession(),
     prisma.savedCombination.findMany({
-      where: {
-        visibility: "PUBLIC",
-      },
+      where: { visibility: "PUBLIC" },
       orderBy: [{ favoritesCount: "desc" }, { updatedAt: "desc" }],
       take: 4,
+      select: { id: true, publicSlug: true, name: true, description: true, favoritesCount: true },
+    }),
+    getLiveSnapshots().catch((err) => {
+      console.error("[page] getLiveSnapshots failed — degrading to empty snapshots", err);
+      return {} as Awaited<ReturnType<typeof getLiveSnapshots>>;
+    }),
+    getTickerItems().catch((err) => {
+      console.error("[page] getTickerItems failed — degrading to empty ticker", err);
+      return [] as Awaited<ReturnType<typeof getTickerItems>>;
+    }),
+    prisma.savedCombination.findMany({
+      where: { visibility: "PUBLIC" },
+      orderBy: [{ favoritesCount: "desc" }, { updatedAt: "desc" }],
+      take: 20,
       select: {
         id: true,
         publicSlug: true,
         name: true,
         description: true,
         favoritesCount: true,
+        layoutJson: true,
+        updatedAt: true,
       },
     }),
-    getLiveSnapshots(),
-    getTickerItems(),
   ]);
 
   const [favoriteChannels, userPreference, selectedCombination]: [
@@ -53,8 +86,11 @@ export default async function Home({
     {
       defaultGridPreset: StoredGridPreset;
       defaultLayoutJson: unknown;
+      reducedMotion: boolean;
+      tickerEnabled: boolean;
+      notificationsEnabled: boolean;
     } | null,
-    { layoutJson: unknown } | null,
+    { publicSlug: string; layoutJson: unknown } | null,
   ] = await Promise.all([
     session
       ? prisma.favoriteChannel.findMany({
@@ -74,6 +110,9 @@ export default async function Home({
           select: {
             defaultGridPreset: true,
             defaultLayoutJson: true,
+            reducedMotion: true,
+            tickerEnabled: true,
+            notificationsEnabled: true,
           },
         })
       : Promise.resolve(null),
@@ -84,6 +123,7 @@ export default async function Home({
             visibility: "PUBLIC",
           },
           select: {
+            publicSlug: true,
             layoutJson: true,
           },
         })
@@ -92,6 +132,15 @@ export default async function Home({
 
   const initialLayout = parseDashboardLayout(userPreference?.defaultLayoutJson ?? null);
   const comboLayout = parseDashboardLayout(selectedCombination?.layoutJson ?? null);
+  const sharedLayout = comboLayout ? null : decodeDashboardLayoutShareParam(layout);
+  const routeLayout = comboLayout ?? sharedLayout;
+  const canonicalShare =
+    selectedCombination && comboLayout
+      ? {
+          publicSlug: selectedCombination.publicSlug,
+          layout: comboLayout,
+        }
+      : null;
 
   const user = session
     ? {
@@ -100,6 +149,14 @@ export default async function Home({
         image: session.user.image,
       }
     : null;
+
+  const liveChannelIdSet = new Set(
+    Object.entries(liveSnapshots)
+      .filter(([, snap]) => snap.isLive)
+      .map(([id]) => id),
+  );
+  const liveNowChannels: RankedChannel[] = rankLiveChannels(channels, liveSnapshots).slice(0, 6);
+  const liveNowCombos: RankedCombo[] = rankRelevantCombos(liveNowComboCandidates, liveChannelIdSet).slice(0, 4);
 
   return (
     <LiveDashboard
@@ -110,7 +167,13 @@ export default async function Home({
       initialTickerItems={tickerItems}
       initialPreset={fromStoredGridPreset(userPreference?.defaultGridPreset)}
       initialLayout={initialLayout}
-      comboLayout={comboLayout}
+      comboLayout={routeLayout}
+      canonicalShare={canonicalShare}
+      reducedMotionEnabled={userPreference?.reducedMotion ?? false}
+      tickerEnabled={userPreference?.tickerEnabled ?? true}
+      liveAlertsEnabled={userPreference?.notificationsEnabled ?? false}
+      liveNowChannels={liveNowChannels}
+      liveNowCombos={liveNowCombos}
     />
   );
 }
