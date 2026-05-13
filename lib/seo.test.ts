@@ -28,13 +28,20 @@ describe("SEO URL helpers", () => {
     );
   });
 
-  it("builds a homepage-only sitemap for current acquisition surfaces", () => {
+  it("builds a sitemap for current acquisition surfaces", () => {
     process.env.NEXT_PUBLIC_APP_URL = "https://vision.example/";
     const urls = getSitemapEntries(new Date("2026-05-13T00:00:00.000Z")).map(
       (entry) => entry.url,
     );
 
-    expect(urls).toEqual(["https://vision.example/"]);
+    expect(urls).toEqual(
+      expect.arrayContaining([
+        "https://vision.example/",
+        "https://vision.example/canales",
+        "https://vision.example/canales/tn",
+        "https://vision.example/canales/categoria/noticias",
+      ]),
+    );
     expect(urls).not.toEqual(
       expect.arrayContaining([
         expect.stringContaining("/ingresar"),
@@ -43,9 +50,19 @@ describe("SEO URL helpers", () => {
         expect.stringContaining("/configuracion"),
         expect.stringContaining("/mis-combinaciones"),
         expect.stringContaining("/api/"),
+        expect.stringContaining("/combo/"),
         expect.stringContaining("/robots.txt"),
         expect.stringContaining("/sitemap.xml"),
       ]),
     );
+  });
+
+  it("does not generate duplicate sitemap URLs", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://vision.example";
+    const urls = getSitemapEntries(new Date("2026-05-13T00:00:00.000Z")).map(
+      (entry) => entry.url,
+    );
+
+    expect(new Set(urls).size).toBe(urls.length);
   });
 });
