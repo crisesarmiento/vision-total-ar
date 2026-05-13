@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { toggleFavoriteCombination } from "@/actions/combinations";
 import { Button } from "@/components/ui/button";
+import { trackClientAnalyticsEvent } from "@/lib/analytics-client";
 import { cn, compactNumber } from "@/lib/utils";
 
 type FavoriteCombinationButtonProps = {
@@ -28,6 +29,9 @@ export function FavoriteCombinationButton({
         const result = await toggleFavoriteCombination(combinationId);
         setFavorited(result.favorited);
         setFavoritesCount(result.favoritesCount);
+        trackClientAnalyticsEvent("favorite_combo_toggled", {
+          action: result.favorited ? "favorite" : "unfavorite",
+        });
         toast.success(
           result.favorited
             ? "Combinación agregada a favoritos."

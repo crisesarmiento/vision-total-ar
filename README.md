@@ -158,11 +158,13 @@ SEED_DEMO_PASSWORD=
 BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=
 NEXT_PUBLIC_APP_URL=
+NEXT_PUBLIC_ENABLE_WEB_ANALYTICS=false
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 YOUTUBE_API_KEY=
 RESEND_API_KEY=
 MAGIC_LINK_FROM=
+VERCEL_WEB_ANALYTICS_DISABLE_LOGS=true
 UPLOADTHING_TOKEN=
 UPLOADTHING_SECRET=
 UPLOADTHING_APP_ID=
@@ -172,6 +174,12 @@ UPLOADTHING_APP_ID=
 sin barra final. `app/sitemap.ts`, `app/robots.ts` y los metadatos canónicos
 usan esa variable para construir URLs absolutas; documentá el nombre y el
 comportamiento esperado, no valores privados de producción.
+
+`NEXT_PUBLIC_ENABLE_WEB_ANALYTICS=true` habilita Vercel Web Analytics y eventos
+agregados de activación. El valor por defecto debe quedar en `false` para
+desarrollo local y entornos donde Analytics no esté habilitado en Vercel.
+`VERCEL_WEB_ANALYTICS_DISABLE_LOGS=true` puede usarse para silenciar logs de
+eventos server-side; no es un ID ni un secreto.
 
 ## Comandos útiles
 ```bash

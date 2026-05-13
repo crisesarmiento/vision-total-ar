@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, MonitorPlay, Radio } from "lucide-react";
+import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,16 @@ export default async function CategoryPage({ params }: CategoryPageParams) {
   return (
     <>
       <JsonLdScript id="category-json-ld" data={structuredData} />
+      <TrackAnalyticsEvents
+        events={[
+          {
+            name: "search_landing_view",
+            properties: {
+              surface: "category",
+            },
+          },
+        ]}
+      />
       <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 md:px-6">
         <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-white/60">
         <Link href="/canales" className="inline-flex items-center gap-2 hover:text-white">
