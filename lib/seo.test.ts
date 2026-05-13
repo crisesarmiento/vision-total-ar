@@ -65,4 +65,17 @@ describe("SEO URL helpers", () => {
 
     expect(new Set(urls).size).toBe(urls.length);
   });
+
+  it("can include eligible public combo paths supplied by the sitemap route", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://vision.example";
+    const urls = getSitemapEntries(new Date("2026-05-13T00:00:00.000Z"), [
+      "/",
+      "/combo/mesa-de-noticias",
+    ]).map((entry) => entry.url);
+
+    expect(urls).toEqual([
+      "https://vision.example/",
+      "https://vision.example/combo/mesa-de-noticias",
+    ]);
+  });
 });

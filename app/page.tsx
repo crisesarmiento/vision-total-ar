@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LiveDashboard } from "@/components/dashboard/live-dashboard";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 import {
   decodeDashboardLayoutShareParam,
   parseDashboardLayout,
@@ -17,6 +18,7 @@ import {
   type RankedCombo,
 } from "@/lib/home/live-now";
 import { getCanonicalUrl } from "@/lib/seo";
+import { buildSiteIdentityStructuredData } from "@/lib/structured-data";
 
 export const dynamic = "force-dynamic";
 
@@ -186,21 +188,24 @@ export default async function Home({
   const liveNowCombos: RankedCombo[] = rankRelevantCombos(liveNowComboCandidates, liveChannelIdSet).slice(0, 4);
 
   return (
-    <LiveDashboard
-      user={user}
-      featuredCombinations={featuredCombinations}
-      favoriteChannelIds={favoriteChannels.map((item) => item.channelId)}
-      initialLiveSnapshots={liveSnapshots}
-      initialTickerItems={tickerItems}
-      initialPreset={fromStoredGridPreset(userPreference?.defaultGridPreset)}
-      initialLayout={initialLayout}
-      comboLayout={routeLayout}
-      canonicalShare={canonicalShare}
-      reducedMotionEnabled={userPreference?.reducedMotion ?? false}
-      tickerEnabled={userPreference?.tickerEnabled ?? true}
-      liveAlertsEnabled={userPreference?.notificationsEnabled ?? false}
-      liveNowChannels={liveNowChannels}
-      liveNowCombos={liveNowCombos}
-    />
+    <>
+      <JsonLdScript id="site-identity-json-ld" data={buildSiteIdentityStructuredData()} />
+      <LiveDashboard
+        user={user}
+        featuredCombinations={featuredCombinations}
+        favoriteChannelIds={favoriteChannels.map((item) => item.channelId)}
+        initialLiveSnapshots={liveSnapshots}
+        initialTickerItems={tickerItems}
+        initialPreset={fromStoredGridPreset(userPreference?.defaultGridPreset)}
+        initialLayout={initialLayout}
+        comboLayout={routeLayout}
+        canonicalShare={canonicalShare}
+        reducedMotionEnabled={userPreference?.reducedMotion ?? false}
+        tickerEnabled={userPreference?.tickerEnabled ?? true}
+        liveAlertsEnabled={userPreference?.notificationsEnabled ?? false}
+        liveNowChannels={liveNowChannels}
+        liveNowCombos={liveNowCombos}
+      />
+    </>
   );
 }
