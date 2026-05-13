@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, MonitorPlay, Radio } from "lucide-react";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +13,10 @@ import {
   getPublicChannelRoute,
 } from "@/lib/public-channel-pages";
 import { getCanonicalUrl } from "@/lib/seo";
+import {
+  buildBreadcrumbStructuredData,
+  buildChannelItemListStructuredData,
+} from "@/lib/structured-data";
 
 type CategoryPageParams = {
   params: Promise<{ slug: string }>;
@@ -75,18 +80,32 @@ export default async function CategoryPage({ params }: CategoryPageParams) {
     notFound();
   }
 
+  const structuredData = [
+    buildBreadcrumbStructuredData([
+      { name: "Inicio", url: "/" },
+      { name: "Canales", url: "/canales" },
+      { name: category.label, url: getPublicCategoryRoute(category) },
+    ]),
+    buildChannelItemListStructuredData(
+      categoryChannels,
+      `Canales de ${category.label} en Vision AR`,
+    ),
+  ];
+
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 md:px-6">
-      <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-white/60">
+    <>
+      <JsonLdScript id="category-json-ld" data={structuredData} />
+      <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 md:px-6">
+        <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-white/60">
         <Link href="/canales" className="inline-flex items-center gap-2 hover:text-white">
           <ArrowLeft className="h-4 w-4" />
           Canales
         </Link>
         <span aria-hidden="true">/</span>
         <span>{category.label}</span>
-      </div>
+        </div>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.35em] text-white/50">
             Categoría pública
@@ -134,9 +153,9 @@ export default async function CategoryPage({ params }: CategoryPageParams) {
             reproducción queda en el dashboard para evitar páginas públicas delgadas.
           </p>
         </aside>
-      </section>
+        </section>
 
-      <section className="mt-10">
+        <section className="mt-10">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-white/45">
@@ -171,7 +190,8 @@ export default async function CategoryPage({ params }: CategoryPageParams) {
             </Link>
           ))}
         </div>
-      </section>
-    </main>
+        </section>
+      </main>
+    </>
   );
 }

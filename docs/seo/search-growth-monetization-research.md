@@ -109,6 +109,8 @@ CRIS-294 should add only structured data that accurately represents Vision AR:
 - Avoid `VideoObject` until the product can accurately represent video ownership, thumbnails, live state, and rights for embedded streams.
 - Structured data must match visible content and must not imply Vision AR owns third-party broadcasts.
 
+Implementation note: the current public-safe structured data policy and validation checklist live in [structured-data.md](structured-data.md).
+
 ## Monetization Strategy
 
 AdSense readiness should come after useful public content and trust pages, not before.

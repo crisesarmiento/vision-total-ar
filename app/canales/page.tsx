@@ -4,12 +4,18 @@ import { ArrowRight, Layers3, MonitorPlay, Radio } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 import {
   getChannelsByPublicCategory,
   getPublicCategoryRoute,
   getPublicChannelRoute,
 } from "@/lib/public-channel-pages";
 import { getCanonicalUrl } from "@/lib/seo";
+import {
+  buildBreadcrumbStructuredData,
+  buildCategoryItemListStructuredData,
+  buildChannelItemListStructuredData,
+} from "@/lib/structured-data";
 
 const title = "Canales argentinos en vivo | Vision AR";
 const description =
@@ -42,10 +48,22 @@ export const metadata: Metadata = {
 export default function ChannelsPage() {
   const categoryGroups = getChannelsByPublicCategory();
   const channelCount = categoryGroups.reduce((total, group) => total + group.channels.length, 0);
+  const publicCategories = categoryGroups.map((group) => group.category);
+  const publicChannels = categoryGroups.flatMap((group) => group.channels);
+  const structuredData = [
+    buildBreadcrumbStructuredData([
+      { name: "Inicio", url: "/" },
+      { name: "Canales", url: "/canales" },
+    ]),
+    buildCategoryItemListStructuredData(publicCategories),
+    buildChannelItemListStructuredData(publicChannels),
+  ];
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 md:px-6">
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <>
+      <JsonLdScript id="channels-json-ld" data={structuredData} />
+      <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 md:px-6">
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.35em] text-white/50">
             Directorio público
@@ -96,9 +114,9 @@ export default function ChannelsPage() {
             principal de Vision AR.
           </p>
         </div>
-      </section>
+        </section>
 
-      <section id="categorias" className="mt-10">
+        <section id="categorias" className="mt-10">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-white/45">
@@ -129,9 +147,9 @@ export default function ChannelsPage() {
             </Link>
           ))}
         </div>
-      </section>
+        </section>
 
-      <section className="mt-10 grid gap-5">
+        <section className="mt-10 grid gap-5">
         {categoryGroups.map(({ category, channels }) => (
           <Card key={category.slug} className="border-white/10 bg-white/5">
             <CardHeader>
@@ -177,7 +195,8 @@ export default function ChannelsPage() {
             </CardContent>
           </Card>
         ))}
-      </section>
-    </main>
+        </section>
+      </main>
+    </>
   );
 }

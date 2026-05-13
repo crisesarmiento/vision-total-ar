@@ -18,8 +18,11 @@ export function getCanonicalUrl(path = "/") {
   return new URL(normalizedPath, `${getSiteUrl()}/`).toString();
 }
 
-export function getSitemapEntries(lastModified = new Date()): MetadataRoute.Sitemap {
-  return SITEMAP_PATHS.map((path) => ({
+export function getSitemapEntries(
+  lastModified = new Date(),
+  paths = SITEMAP_PATHS,
+): MetadataRoute.Sitemap {
+  return paths.map((path) => ({
     url: getCanonicalUrl(path),
     lastModified,
   }));

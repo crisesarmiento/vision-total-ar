@@ -5,14 +5,24 @@ import { AlertTriangle, Eye, MonitorPlay, Share2 } from "lucide-react";
 import { CopyLinkButton } from "@/components/combo/copy-link-button";
 import { FavoriteCombinationButton } from "@/components/combo/favorite-combination-button";
 import { ForkCombinationButton } from "@/components/combo/fork-combination-button";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getChannelById } from "@/lib/channels";
 import { getPresetById, type LayoutPresetId } from "@/lib/layout-presets";
 import { prisma } from "@/lib/prisma";
+import {
+  analyzePublicCombinationSeo,
+  getPublicCombinationChannelRoute,
+  getPublicCombinationRoute,
+} from "@/lib/public-combination-seo";
 import { getCanonicalUrl } from "@/lib/seo";
 import { getSession } from "@/lib/session";
+import {
+  buildBreadcrumbStructuredData,
+  buildPublicCombinationChannelItemListStructuredData,
+} from "@/lib/structured-data";
 import { compactNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +60,8 @@ export async function generateMetadata({
       description: true,
       publicSlug: true,
       visibility: true,
+      layoutJson: true,
+      updatedAt: true,
     },
   });
 
@@ -63,20 +75,26 @@ export async function generateMetadata({
     };
   }
 
+  const seoSummary = analyzePublicCombinationSeo(combination);
   const title = combination.name;
+  const updatedAt = formatUpdatedAt(combination.updatedAt);
   const description =
-    combination.description ??
-    "Combinación pública de Vision AR para abrir una grilla multiview de señales argentinas en vivo.";
-  const canonicalUrl = getCanonicalUrl(`/combo/${combination.publicSlug}`);
+    seoSummary.isIndexable
+      ? `${seoSummary.description} Incluye ${seoSummary.uniqueChannels.length} señales argentinas en vivo y fue actualizada el ${updatedAt}.`
+      : seoSummary.description ||
+        "Combinación pública de Vision AR para abrir una grilla multiview de señales argentinas en vivo.";
+  const canonicalUrl = getCanonicalUrl(getPublicCombinationRoute(combination.publicSlug));
 
   return {
-    title,
+    title: {
+      absolute: `${title} | Vision AR`,
+    },
     description,
     alternates: {
       canonical: canonicalUrl,
     },
     robots: {
-      index: false,
+      index: seoSummary.isIndexable,
       follow: true,
     },
     openGraph: {
@@ -124,12 +142,11 @@ export default async function PublicCombinationPage({
       })
     : null;
 
-  const layout = combination.layoutJson as ComboLayout;
-  const preset = getPresetById(layout.preset ?? "2x2");
-  const players = layout.players ?? [];
-  const missingChannelsCount = players.filter(
-    (player) => !getChannelById(player.channelId),
-  ).length;
+  const seoSummary = analyzePublicCombinationSeo(combination);
+  const layout = seoSummary.layout as ComboLayout | null;
+  const preset = getPresetById(layout?.preset ?? "2x2");
+  const players = layout?.players ?? [];
+  const missingChannelsCount = seoSummary.missingChannelIds.length;
   const gridColumns =
     preset.columns === 1
       ? "grid-cols-1"
@@ -138,10 +155,26 @@ export default async function PublicCombinationPage({
         : preset.columns === 3
           ? "md:grid-cols-2 xl:grid-cols-3"
           : "md:grid-cols-2 xl:grid-cols-4";
+  const structuredData = [
+    buildBreadcrumbStructuredData([
+      { name: "Inicio", url: "/" },
+      { name: combination.name, url: getPublicCombinationRoute(combination.publicSlug) },
+    ]),
+    ...(seoSummary.isIndexable && seoSummary.uniqueChannels.length
+      ? [
+          buildPublicCombinationChannelItemListStructuredData(
+            seoSummary.uniqueChannels,
+            combination.name,
+          ),
+        ]
+      : []),
+  ];
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 py-8">
-      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+    <>
+      <JsonLdScript id="combo-json-ld" data={structuredData} />
+      <main className="mx-auto min-h-screen max-w-7xl px-4 py-8">
+        <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
         <div className="min-w-0 max-w-3xl">
           <p className="text-xs uppercase tracking-[0.35em] text-white/50">Combinación pública</p>
           <h1 className="mt-2 break-words text-3xl font-semibold leading-tight">
@@ -149,6 +182,7 @@ export default async function PublicCombinationPage({
           </h1>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/60">
             <Badge variant="secondary">{players.length} señales</Badge>
+            <Badge variant="outline">{seoSummary.uniqueChannels.length} únicas</Badge>
             <Badge variant="outline">{preset.name}</Badge>
             <Badge variant="outline">{compactNumber(combination.favoritesCount)} favs</Badge>
             <span>Actualizada {formatUpdatedAt(combination.updatedAt)}</span>
@@ -159,7 +193,7 @@ export default async function PublicCombinationPage({
           </p>
           <p className="mt-2 text-sm text-white/50">Curada por {combination.owner.name}</p>
         </div>
-        <div className="min-w-0 rounded-lg border border-white/10 bg-black/20 p-3">
+        <aside className="min-w-0 rounded-lg border border-white/10 bg-black/20 p-3">
           <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-white/45">
             <Share2 className="h-3.5 w-3.5" />
             Acciones
@@ -183,10 +217,38 @@ export default async function PublicCombinationPage({
             )}
             {session ? <ForkCombinationButton combinationId={combination.id} /> : null}
           </div>
+          <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-4 text-sm">
+            <div>
+              <dt className="text-white/45">Señales</dt>
+              <dd className="mt-1 font-medium">{players.length}</dd>
+            </div>
+            <div>
+              <dt className="text-white/45">Únicas</dt>
+              <dd className="mt-1 font-medium">{seoSummary.uniqueChannels.length}</dd>
+            </div>
+            <div className="col-span-2">
+              <dt className="text-white/45">Cobertura</dt>
+              <dd className="mt-2 flex flex-wrap gap-2">
+                {seoSummary.categories.length ? (
+                  seoSummary.categories.map((category) => (
+                    <Link
+                      key={category.slug}
+                      href={category.route}
+                      className="rounded-full border border-white/10 px-2.5 py-1 text-xs font-medium text-white/70 transition hover:border-primary/40 hover:text-white"
+                    >
+                      {category.label}
+                    </Link>
+                  ))
+                ) : (
+                  <span className="text-white/55">Sin categorías públicas</span>
+                )}
+              </dd>
+            </div>
+          </dl>
+        </aside>
         </div>
-      </div>
 
-      <Card>
+        <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5 text-primary" />
@@ -199,7 +261,7 @@ export default async function PublicCombinationPage({
         <CardContent>
           {players.length ? (
             <>
-             {missingChannelsCount ? (
+              {missingChannelsCount ? (
                 <div className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
                   <div className="flex items-center gap-2 font-medium">
                     <AlertTriangle className="h-4 w-4" />
@@ -250,11 +312,26 @@ export default async function PublicCombinationPage({
                       />
                       <div className="border-t border-white/10 px-4 py-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium">{channel.name}</p>
+                          <Link
+                            href={getPublicCombinationChannelRoute(channel)}
+                            className="font-medium hover:text-primary"
+                          >
+                            {channel.name}
+                          </Link>
                           <span
                             className="h-2.5 w-2.5 rounded-full"
                             style={{ backgroundColor: channel.accent }}
                           />
+                          <Link
+                            href={
+                              seoSummary.categories.find(
+                                (category) => category.slug === channel.category,
+                              )?.route ?? "/canales"
+                            }
+                            className="text-xs text-white/50 hover:text-white"
+                          >
+                            Ver categoría
+                          </Link>
                         </div>
                         <p className="mt-1 text-sm text-white/60">{channel.description}</p>
                       </div>
@@ -275,7 +352,8 @@ export default async function PublicCombinationPage({
             </div>
           )}
         </CardContent>
-      </Card>
-    </main>
+        </Card>
+      </main>
+    </>
   );
 }
