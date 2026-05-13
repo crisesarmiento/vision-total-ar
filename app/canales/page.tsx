@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Layers3, MonitorPlay, Radio } from "lucide-react";
+import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,6 +63,16 @@ export default function ChannelsPage() {
   return (
     <>
       <JsonLdScript id="channels-json-ld" data={structuredData} />
+      <TrackAnalyticsEvents
+        events={[
+          {
+            name: "search_landing_view",
+            properties: {
+              surface: "channels",
+            },
+          },
+        ]}
+      />
       <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 md:px-6">
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">

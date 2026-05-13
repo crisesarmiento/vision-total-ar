@@ -6,6 +6,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { forkPublicCombination } from "@/actions/combinations";
 import { Button } from "@/components/ui/button";
+import { trackClientAnalyticsEvent } from "@/lib/analytics-client";
 
 type ForkCombinationButtonProps = {
   combinationId: string;
@@ -19,6 +20,9 @@ export function ForkCombinationButton({ combinationId }: ForkCombinationButtonPr
     startTransition(async () => {
       try {
         const fork = await forkPublicCombination(combinationId);
+        trackClientAnalyticsEvent("public_combo_forked", {
+          result: "success",
+        });
         toast.success("Guardamos la combinación en tu librería.");
         router.push(`/?combo=${fork.publicSlug}`);
       } catch (error) {

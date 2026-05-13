@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle, Eye, MonitorPlay, Share2 } from "lucide-react";
+import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { CopyLinkButton } from "@/components/combo/copy-link-button";
 import { FavoriteCombinationButton } from "@/components/combo/favorite-combination-button";
 import { ForkCombinationButton } from "@/components/combo/fork-combination-button";
@@ -24,6 +25,7 @@ import {
   buildPublicCombinationChannelItemListStructuredData,
 } from "@/lib/structured-data";
 import { compactNumber } from "@/lib/utils";
+import { bucketCount, bucketFavoriteCount } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -173,6 +175,25 @@ export default async function PublicCombinationPage({
   return (
     <>
       <JsonLdScript id="combo-json-ld" data={structuredData} />
+      <TrackAnalyticsEvents
+        events={[
+          {
+            name: "search_landing_view",
+            properties: {
+              surface: "public_combo",
+            },
+          },
+          {
+            name: "public_combo_open",
+            properties: {
+              indexable: seoSummary.isIndexable,
+              channel_count_bucket: bucketCount(seoSummary.uniqueChannels.length),
+              missing_channel_count_bucket: bucketCount(missingChannelsCount),
+              favorite_count_bucket: bucketFavoriteCount(combination.favoritesCount),
+            },
+          },
+        ]}
+      />
       <main className="mx-auto min-h-screen max-w-7xl px-4 py-8">
         <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
         <div className="min-w-0 max-w-3xl">

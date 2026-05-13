@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { LiveDashboard } from "@/components/dashboard/live-dashboard";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
 import {
@@ -19,6 +20,7 @@ import {
 } from "@/lib/home/live-now";
 import { getCanonicalUrl } from "@/lib/seo";
 import { buildSiteIdentityStructuredData } from "@/lib/structured-data";
+import { getDashboardOpenSource } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -190,6 +192,16 @@ export default async function Home({
   return (
     <>
       <JsonLdScript id="site-identity-json-ld" data={buildSiteIdentityStructuredData()} />
+      <TrackAnalyticsEvents
+        events={[
+          {
+            name: "dashboard_open",
+            properties: {
+              source: getDashboardOpenSource({ combo, layout }),
+            },
+          },
+        ]}
+      />
       <LiveDashboard
         user={user}
         featuredCombinations={featuredCombinations}

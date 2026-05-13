@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { WebAnalytics } from "@/components/analytics/web-analytics";
 import { Providers } from "@/components/providers";
 import { getSiteUrl } from "@/lib/seo";
 
@@ -51,6 +52,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-[family-name:var(--font-geist-sans)] antialiased`}
       >
         <Providers>{children}</Providers>
+        <WebAnalytics />
       </body>
     </html>
   );
