@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { BarChart3, MonitorPlay } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
@@ -9,6 +10,14 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Tu perfil",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 type ChannelAnalyticsRecord = {
   channelId: string;

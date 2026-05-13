@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle, Eye, MonitorPlay, Share2 } from "lucide-react";
@@ -10,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { getChannelById } from "@/lib/channels";
 import { getPresetById, type LayoutPresetId } from "@/lib/layout-presets";
 import { prisma } from "@/lib/prisma";
+import { getCanonicalUrl } from "@/lib/seo";
 import { getSession } from "@/lib/session";
 import { compactNumber } from "@/lib/utils";
 
@@ -31,11 +33,71 @@ function formatUpdatedAt(value: Date) {
   }).format(value);
 }
 
+type PublicCombinationPageParams = {
+  params: Promise<{ id: string }>;
+};
+
+export async function generateMetadata({
+  params,
+}: PublicCombinationPageParams): Promise<Metadata> {
+  const { id } = await params;
+  const combination = await prisma.savedCombination.findUnique({
+    where: {
+      publicSlug: id,
+    },
+    select: {
+      name: true,
+      description: true,
+      publicSlug: true,
+      visibility: true,
+    },
+  });
+
+  if (!combination || combination.visibility !== "PUBLIC") {
+    return {
+      title: "Combinación no disponible",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  const title = combination.name;
+  const description =
+    combination.description ??
+    "Combinación pública de Vision AR para abrir una grilla multiview de señales argentinas en vivo.";
+  const canonicalUrl = getCanonicalUrl(`/combo/${combination.publicSlug}`);
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    robots: {
+      index: false,
+      follow: true,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      type: "website",
+      locale: "es_AR",
+      siteName: "Vision AR",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
 export default async function PublicCombinationPage({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+}: PublicCombinationPageParams) {
   const { id } = await params;
   const session = await getSession();
   const combination = await prisma.savedCombination.findUnique({

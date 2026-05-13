@@ -168,6 +168,11 @@ UPLOADTHING_SECRET=
 UPLOADTHING_APP_ID=
 ```
 
+`NEXT_PUBLIC_APP_URL` debe apuntar al origen canónico público de cada entorno,
+sin barra final. `app/sitemap.ts`, `app/robots.ts` y los metadatos canónicos
+usan esa variable para construir URLs absolutas; documentá el nombre y el
+comportamiento esperado, no valores privados de producción.
+
 ## Comandos útiles
 ```bash
 npm run dev

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { LiveDashboard } from "@/components/dashboard/live-dashboard";
 import {
   decodeDashboardLayoutShareParam,
@@ -15,8 +16,34 @@ import {
   type RankedChannel,
   type RankedCombo,
 } from "@/lib/home/live-now";
+import { getCanonicalUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+const homeTitle = "Vision AR";
+const homeDescription =
+  "Multiview premium para seguir noticias argentinas en vivo, comparar señales y abrir combinaciones públicas desde una sola pantalla.";
+
+export const metadata: Metadata = {
+  title: homeTitle,
+  description: homeDescription,
+  alternates: {
+    canonical: getCanonicalUrl("/"),
+  },
+  openGraph: {
+    title: homeTitle,
+    description: homeDescription,
+    url: getCanonicalUrl("/"),
+    type: "website",
+    locale: "es_AR",
+    siteName: "Vision AR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: homeTitle,
+    description: homeDescription,
+  },
+};
 
 type FeaturedCombination = {
   id: string;

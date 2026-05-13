@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { MonitorPlay, SlidersHorizontal } from "lucide-react";
 import { SettingsForm } from "@/components/profile/settings-form";
@@ -7,6 +8,14 @@ import { requireSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Configuración personal",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function SettingsPage() {
   const session = await requireSession();
