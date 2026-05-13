@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Clock3, Eye, Library, MonitorPlay, Star } from "lucide-react";
 import { DeleteCombinationButton } from "@/components/combo/delete-combination-button";
@@ -9,6 +10,14 @@ import { requireSession } from "@/lib/session";
 import { compactNumber } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Mis combinaciones",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 type SavedCombinationRecord = {
   id: string;
