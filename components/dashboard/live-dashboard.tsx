@@ -46,6 +46,7 @@ import { NewsTicker } from "@/components/dashboard/news-ticker";
 import { PlayerTile } from "@/components/dashboard/player-tile";
 import { SaveCombinationDialog } from "@/components/dashboard/save-combination-dialog";
 import { ShareDashboardButton } from "@/components/dashboard/share-dashboard-button";
+import { PublicFooter } from "@/components/public-footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1076,6 +1077,7 @@ export function LiveDashboard({
           </section>
         </div>
       </div>
+      <PublicFooter className="max-w-[1800px] px-4 pb-8 md:px-6" />
     </div>
   );
 }

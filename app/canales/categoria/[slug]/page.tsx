@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, MonitorPlay, Radio } from "lucide-react";
 import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
+import { PublicFooter } from "@/components/public-footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -203,6 +204,7 @@ export default async function CategoryPage({ params }: CategoryPageParams) {
         </div>
         </section>
       </main>
+      <PublicFooter />
     </>
   );
 }

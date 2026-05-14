@@ -6,6 +6,7 @@ import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-eve
 import { CopyLinkButton } from "@/components/combo/copy-link-button";
 import { FavoriteCombinationButton } from "@/components/combo/favorite-combination-button";
 import { ForkCombinationButton } from "@/components/combo/fork-combination-button";
+import { PublicFooter } from "@/components/public-footer";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -375,6 +376,7 @@ export default async function PublicCombinationPage({
         </CardContent>
         </Card>
       </main>
+      <PublicFooter />
     </>
   );
 }

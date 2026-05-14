@@ -1,9 +1,14 @@
 import type { MetadataRoute } from "next";
 import { getPublicChannelSitemapPaths } from "@/lib/public-channel-pages";
+import { PUBLIC_POLICY_PATHS } from "@/lib/public-policy-pages";
 
 const DEFAULT_APP_URL = "http://localhost:3000";
 
-export const SITEMAP_PATHS = ["/", ...getPublicChannelSitemapPaths()];
+export const SITEMAP_PATHS = [
+  "/",
+  ...getPublicChannelSitemapPaths(),
+  ...PUBLIC_POLICY_PATHS,
+];
 
 export function getSiteUrl() {
   const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || DEFAULT_APP_URL;
