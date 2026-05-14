@@ -46,6 +46,7 @@ import { NewsTicker } from "@/components/dashboard/news-ticker";
 import { PlayerTile } from "@/components/dashboard/player-tile";
 import { SaveCombinationDialog } from "@/components/dashboard/save-combination-dialog";
 import { ShareDashboardButton } from "@/components/dashboard/share-dashboard-button";
+import { PublicFooter } from "@/components/public-footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -829,6 +830,12 @@ export function LiveDashboard({
               </div>
 
               <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                <Button asChild variant="outline" size="sm" className="flex-1 whitespace-normal sm:flex-none">
+                  <Link href="/canales">
+                    <Radio className="h-4 w-4" />
+                    Canales
+                  </Link>
+                </Button>
                 {user ? (
                   <div
                     className="flex w-full flex-wrap items-center gap-2 rounded-3xl border border-white/10 bg-black/20 p-2 sm:w-auto"
@@ -1070,6 +1077,7 @@ export function LiveDashboard({
           </section>
         </div>
       </div>
+      <PublicFooter className="max-w-[1800px] px-4 pb-8 md:px-6" />
     </div>
   );
 }

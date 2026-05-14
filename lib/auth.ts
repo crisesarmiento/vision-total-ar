@@ -3,6 +3,8 @@ import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { magicLink } from "better-auth/plugins";
 import { Resend } from "resend";
+import { getSignupMethodFromAuthContext } from "@/lib/analytics";
+import { trackServerAnalyticsEvent } from "@/lib/analytics-server";
 import { prisma } from "@/lib/prisma";
 
 const resend = process.env.RESEND_API_KEY
@@ -27,6 +29,17 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        async after(_user, context) {
+          await trackServerAnalyticsEvent("signup_completed", {
+            method: getSignupMethodFromAuthContext(context),
+          });
+        },
+      },
+    },
   },
   socialProviders,
   experimental: {

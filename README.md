@@ -32,6 +32,9 @@ Vision AR es una plataforma premium de multiview para seguir todas las visiones 
 - Investigación de diseño asistido por IA: [docs/design/ai-design-research.md](docs/design/ai-design-research.md)
 - Desglose de tickets de Milestone 7: [docs/design/milestone-7-child-tickets.md](docs/design/milestone-7-child-tickets.md)
 
+## Crecimiento
+- Investigación SEO y monetización: [docs/seo/search-growth-monetization-research.md](docs/seo/search-growth-monetization-research.md)
+
 ## Primeros pasos
 ### Opción recomendada: Docker Compose
 1. Levantar PostgreSQL local, aplicar esquema, sembrar datos demo y arrancar Next.js:
@@ -155,15 +158,50 @@ SEED_DEMO_PASSWORD=
 BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=
 NEXT_PUBLIC_APP_URL=
+NEXT_PUBLIC_ENABLE_WEB_ANALYTICS=false
+NEXT_PUBLIC_ADSENSE_ENABLED=false
+NEXT_PUBLIC_ADSENSE_CLIENT_ID=
+NEXT_PUBLIC_ADSENSE_SLOT_CHANNELS_INDEX=
+NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_CATEGORY=
+NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_DETAIL=
+NEXT_PUBLIC_ADSENSE_SLOT_PUBLIC_COMBO=
+ADSENSE_DISABLED=true
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 YOUTUBE_API_KEY=
 RESEND_API_KEY=
 MAGIC_LINK_FROM=
+VERCEL_WEB_ANALYTICS_DISABLE_LOGS=true
 UPLOADTHING_TOKEN=
 UPLOADTHING_SECRET=
 UPLOADTHING_APP_ID=
 ```
+
+`NEXT_PUBLIC_APP_URL` debe apuntar al origen canónico público de cada entorno,
+sin barra final. `app/sitemap.ts`, `app/robots.ts` y los metadatos canónicos
+usan esa variable para construir URLs absolutas; documentá el nombre y el
+comportamiento esperado, no valores privados de producción.
+
+`NEXT_PUBLIC_ENABLE_WEB_ANALYTICS=true` habilita Vercel Web Analytics y eventos
+agregados de activación. El valor por defecto debe quedar en `false` para
+desarrollo local y entornos donde Analytics no esté habilitado en Vercel.
+`VERCEL_WEB_ANALYTICS_DISABLE_LOGS=true` puede usarse para silenciar logs de
+eventos server-side; no es un ID ni un secreto.
+
+`NEXT_PUBLIC_ADSENSE_ENABLED=true` habilita los hooks públicos de AdSense solo
+en `production` y solo si `NEXT_PUBLIC_ADSENSE_CLIENT_ID` contiene un ID válido
+con forma `ca-pub-...`. `ADSENSE_DISABLED=true` es el kill switch servidor y
+fuerza que no se emita el script ni `/ads.txt`, aunque las variables públicas
+estén configuradas. Documentá nombres y comportamiento, no IDs reales ni URLs
+privadas de cuenta.
+
+Los slots públicos de AdSense se configuran por superficie con
+`NEXT_PUBLIC_ADSENSE_SLOT_CHANNELS_INDEX`,
+`NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_CATEGORY`,
+`NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_DETAIL` y
+`NEXT_PUBLIC_ADSENSE_SLOT_PUBLIC_COMBO`. Deben quedar vacíos hasta que la
+cuenta y cada unidad estén aprobadas. Solo se aceptan IDs numéricos y los slots
+son inertes si la configuración global de AdSense está deshabilitada.
 
 ## Comandos útiles
 ```bash
@@ -220,6 +258,12 @@ npm run prisma:studio
 - `lib/youtube.ts`: status y viewers en vivo con cache corto
 - `lib/rss.ts`: agregación del ticker
 - `docs/runbooks/rate-limiting.md`: límites repo-side para auth y polling, más nota operativa para Vercel WAF
+
+## Monetización
+- `docs/runbooks/adsense-readiness.md`: configuración pública segura para
+  AdSense, `/ads.txt`, kill switch y checklist manual de aprobación.
+- Los IDs reales de publisher, dashboards de cuenta y valores de producción son
+  privados y no deben commitearse.
 
 ## CI
 GitHub Actions ejecuta:
@@ -307,6 +351,7 @@ Config recomendada:
 - No usar milestones para trabajo diario ni para reemplazar cycles de Linear.
 
 ## Runbooks
+- [Lanzamiento en Google Search Console](docs/runbooks/search-console-launch.md)
 - [Migraciones de producción con Neon y Vercel](docs/runbooks/production-database-migrations.md)
 - [Migración de Prisma Postgres a Neon](docs/runbooks/neon-migration.md)
 

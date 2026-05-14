@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthPanel } from "@/components/auth/auth-panel";
 import { getSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Registrarse",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function SignUpPage() {
   const session = await getSession();

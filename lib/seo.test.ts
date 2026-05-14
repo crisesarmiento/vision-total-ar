@@ -1,0 +1,91 @@
+import { afterEach, describe, expect, it } from "vitest";
+import { getCanonicalUrl, getSiteUrl, getSitemapEntries } from "./seo";
+
+const originalAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+afterEach(() => {
+  if (originalAppUrl === undefined) {
+    delete process.env.NEXT_PUBLIC_APP_URL;
+  } else {
+    process.env.NEXT_PUBLIC_APP_URL = originalAppUrl;
+  }
+});
+
+describe("SEO URL helpers", () => {
+  it("falls back to the local app URL", () => {
+    delete process.env.NEXT_PUBLIC_APP_URL;
+
+    expect(getSiteUrl()).toBe("http://localhost:3000");
+    expect(getCanonicalUrl("/")).toBe("http://localhost:3000/");
+  });
+
+  it("normalizes configured app URLs with trailing slashes", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://vision.example///";
+
+    expect(getSiteUrl()).toBe("https://vision.example");
+    expect(getCanonicalUrl("/combo/mesa-de-noticias")).toBe(
+      "https://vision.example/combo/mesa-de-noticias",
+    );
+  });
+
+  it("builds a sitemap for current acquisition surfaces", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://vision.example/";
+    const urls = getSitemapEntries(new Date("2026-05-13T00:00:00.000Z")).map(
+      (entry) => entry.url,
+    );
+
+    expect(urls).toEqual(
+      expect.arrayContaining([
+        "https://vision.example/",
+        "https://vision.example/canales",
+        "https://vision.example/canales/tn",
+        "https://vision.example/canales/categoria/noticias",
+        "https://vision.example/guias",
+        "https://vision.example/guias/seguir-ultimo-momento-argentina",
+        "https://vision.example/guias/comparar-cobertura-en-vivo",
+        "https://vision.example/guias/combinaciones-publicas",
+        "https://vision.example/guias/uso-responsable-fuentes-en-vivo",
+        "https://vision.example/acerca-de",
+        "https://vision.example/contacto",
+        "https://vision.example/privacidad",
+        "https://vision.example/terminos",
+        "https://vision.example/politica-editorial",
+      ]),
+    );
+    expect(urls).not.toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("/ingresar"),
+        expect.stringContaining("/registrarse"),
+        expect.stringContaining("/perfil"),
+        expect.stringContaining("/configuracion"),
+        expect.stringContaining("/mis-combinaciones"),
+        expect.stringContaining("/api/"),
+        expect.stringContaining("/combo/"),
+        expect.stringContaining("/robots.txt"),
+        expect.stringContaining("/sitemap.xml"),
+      ]),
+    );
+  });
+
+  it("does not generate duplicate sitemap URLs", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://vision.example";
+    const urls = getSitemapEntries(new Date("2026-05-13T00:00:00.000Z")).map(
+      (entry) => entry.url,
+    );
+
+    expect(new Set(urls).size).toBe(urls.length);
+  });
+
+  it("can include eligible public combo paths supplied by the sitemap route", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://vision.example";
+    const urls = getSitemapEntries(new Date("2026-05-13T00:00:00.000Z"), [
+      "/",
+      "/combo/mesa-de-noticias",
+    ]).map((entry) => entry.url);
+
+    expect(urls).toEqual([
+      "https://vision.example/",
+      "https://vision.example/combo/mesa-de-noticias",
+    ]);
+  });
+});

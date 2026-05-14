@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
+import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { LiveDashboard } from "@/components/dashboard/live-dashboard";
+import { JsonLdScript } from "@/components/seo/json-ld-script";
 import {
   decodeDashboardLayoutShareParam,
   parseDashboardLayout,
@@ -15,8 +18,36 @@ import {
   type RankedChannel,
   type RankedCombo,
 } from "@/lib/home/live-now";
+import { getCanonicalUrl } from "@/lib/seo";
+import { buildSiteIdentityStructuredData } from "@/lib/structured-data";
+import { getDashboardOpenSource } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
+
+const homeTitle = "Vision AR";
+const homeDescription =
+  "Multiview premium para seguir noticias argentinas en vivo, comparar señales y abrir combinaciones públicas desde una sola pantalla.";
+
+export const metadata: Metadata = {
+  title: homeTitle,
+  description: homeDescription,
+  alternates: {
+    canonical: getCanonicalUrl("/"),
+  },
+  openGraph: {
+    title: homeTitle,
+    description: homeDescription,
+    url: getCanonicalUrl("/"),
+    type: "website",
+    locale: "es_AR",
+    siteName: "Vision AR",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: homeTitle,
+    description: homeDescription,
+  },
+};
 
 type FeaturedCombination = {
   id: string;
@@ -159,21 +190,34 @@ export default async function Home({
   const liveNowCombos: RankedCombo[] = rankRelevantCombos(liveNowComboCandidates, liveChannelIdSet).slice(0, 4);
 
   return (
-    <LiveDashboard
-      user={user}
-      featuredCombinations={featuredCombinations}
-      favoriteChannelIds={favoriteChannels.map((item) => item.channelId)}
-      initialLiveSnapshots={liveSnapshots}
-      initialTickerItems={tickerItems}
-      initialPreset={fromStoredGridPreset(userPreference?.defaultGridPreset)}
-      initialLayout={initialLayout}
-      comboLayout={routeLayout}
-      canonicalShare={canonicalShare}
-      reducedMotionEnabled={userPreference?.reducedMotion ?? false}
-      tickerEnabled={userPreference?.tickerEnabled ?? true}
-      liveAlertsEnabled={userPreference?.notificationsEnabled ?? false}
-      liveNowChannels={liveNowChannels}
-      liveNowCombos={liveNowCombos}
-    />
+    <>
+      <JsonLdScript id="site-identity-json-ld" data={buildSiteIdentityStructuredData()} />
+      <TrackAnalyticsEvents
+        events={[
+          {
+            name: "dashboard_open",
+            properties: {
+              source: getDashboardOpenSource({ combo, layout }),
+            },
+          },
+        ]}
+      />
+      <LiveDashboard
+        user={user}
+        featuredCombinations={featuredCombinations}
+        favoriteChannelIds={favoriteChannels.map((item) => item.channelId)}
+        initialLiveSnapshots={liveSnapshots}
+        initialTickerItems={tickerItems}
+        initialPreset={fromStoredGridPreset(userPreference?.defaultGridPreset)}
+        initialLayout={initialLayout}
+        comboLayout={routeLayout}
+        canonicalShare={canonicalShare}
+        reducedMotionEnabled={userPreference?.reducedMotion ?? false}
+        tickerEnabled={userPreference?.tickerEnabled ?? true}
+        liveAlertsEnabled={userPreference?.notificationsEnabled ?? false}
+        liveNowChannels={liveNowChannels}
+        liveNowCombos={liveNowCombos}
+      />
+    </>
   );
 }
