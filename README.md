@@ -323,6 +323,7 @@ Config recomendada:
 - No usar milestones para trabajo diario ni para reemplazar cycles de Linear.
 
 ## Runbooks
+- [Lanzamiento en Google Search Console](docs/runbooks/search-console-launch.md)
 - [Migraciones de producción con Neon y Vercel](docs/runbooks/production-database-migrations.md)
 - [Migración de Prisma Postgres a Neon](docs/runbooks/neon-migration.md)
 
