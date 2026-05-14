@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Layers3, MonitorPlay, Radio } from "lucide-react";
 import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
+import { PublicFooter } from "@/components/public-footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -208,6 +209,7 @@ export default function ChannelsPage() {
         ))}
         </section>
       </main>
+      <PublicFooter />
     </>
   );
 }

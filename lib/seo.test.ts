@@ -40,6 +40,11 @@ describe("SEO URL helpers", () => {
         "https://vision.example/canales",
         "https://vision.example/canales/tn",
         "https://vision.example/canales/categoria/noticias",
+        "https://vision.example/acerca-de",
+        "https://vision.example/contacto",
+        "https://vision.example/privacidad",
+        "https://vision.example/terminos",
+        "https://vision.example/politica-editorial",
       ]),
     );
     expect(urls).not.toEqual(
