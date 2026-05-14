@@ -10,8 +10,26 @@ type PublicPolicyPageViewProps = {
   page: PublicPolicyPage;
 };
 
+function containsTrustedGithubIssuesUrl(text: string) {
+  const urlCandidates = text.match(/https?:\/\/[^\s)]+/g) ?? [];
+
+  return urlCandidates.some((candidate) => {
+    try {
+      const parsed = new URL(candidate);
+      const normalizedPath = parsed.pathname.replace(/\/+$/, "");
+      return (
+        parsed.protocol === "https:" &&
+        parsed.hostname === "github.com" &&
+        normalizedPath === "/crisesarmiento/vision-total-ar/issues"
+      );
+    } catch {
+      return false;
+    }
+  });
+}
+
 function renderBodyText(text: string) {
-  if (text.includes("https://github.com/crisesarmiento/vision-total-ar/issues")) {
+  if (containsTrustedGithubIssuesUrl(text)) {
     return (
       <>
         Para errores no sensibles, pedidos de mejora o comentarios generales, usá{" "}
