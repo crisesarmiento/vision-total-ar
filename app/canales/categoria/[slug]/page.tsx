@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, MonitorPlay, Radio } from "lucide-react";
+import { AdSenseScript } from "@/components/adsense/adsense-script";
 import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { PublicFooter } from "@/components/public-footer";
@@ -96,6 +97,7 @@ export default async function CategoryPage({ params }: CategoryPageParams) {
 
   return (
     <>
+      <AdSenseScript />
       <JsonLdScript id="category-json-ld" data={structuredData} />
       <TrackAnalyticsEvents
         events={[

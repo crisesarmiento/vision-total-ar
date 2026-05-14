@@ -29,6 +29,10 @@ Read root `AGENTS.md` first for current project context, workflow rules, and ski
 - Release changes should respect `develop` as integration and `main` as production.
 - Migration changes should update the production migration runbook and PR checklist.
 - Vercel changes should verify preview and production behavior separately.
+- AdSense readiness changes must keep real publisher IDs and account URLs out of
+  public files, default ads off outside production, preserve `ADSENSE_DISABLED`
+  as the server-side kill switch, and document only variable names plus public
+  behavior.
 - Neon PR preview branch workflows should use `pull_request`, skip fork PRs before reading secrets, avoid logging database URLs, and document whether Vercel preview env injection is included.
 - Rate limiting changes should keep repo-side limits public-safe, document Vercel WAF behavior without private dashboard details, and verify `/api/live`, `/api/ticker`, and auth routes.
 - Public API or server action changes must pass the security review checklist in `AGENTS.md` ("Public API & Server Action Security Review") before merge.

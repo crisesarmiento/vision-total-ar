@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Layers3, MonitorPlay, Radio } from "lucide-react";
+import { AdSenseScript } from "@/components/adsense/adsense-script";
 import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
 import { PublicFooter } from "@/components/public-footer";
@@ -94,6 +95,7 @@ export default async function ChannelPage({ params }: ChannelPageParams) {
 
   return (
     <>
+      <AdSenseScript />
       <JsonLdScript id="channel-json-ld" data={structuredData} />
       <TrackAnalyticsEvents
         events={[
