@@ -161,6 +161,10 @@ NEXT_PUBLIC_APP_URL=
 NEXT_PUBLIC_ENABLE_WEB_ANALYTICS=false
 NEXT_PUBLIC_ADSENSE_ENABLED=false
 NEXT_PUBLIC_ADSENSE_CLIENT_ID=
+NEXT_PUBLIC_ADSENSE_SLOT_CHANNELS_INDEX=
+NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_CATEGORY=
+NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_DETAIL=
+NEXT_PUBLIC_ADSENSE_SLOT_PUBLIC_COMBO=
 ADSENSE_DISABLED=true
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -190,6 +194,14 @@ con forma `ca-pub-...`. `ADSENSE_DISABLED=true` es el kill switch servidor y
 fuerza que no se emita el script ni `/ads.txt`, aunque las variables públicas
 estén configuradas. Documentá nombres y comportamiento, no IDs reales ni URLs
 privadas de cuenta.
+
+Los slots públicos de AdSense se configuran por superficie con
+`NEXT_PUBLIC_ADSENSE_SLOT_CHANNELS_INDEX`,
+`NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_CATEGORY`,
+`NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_DETAIL` y
+`NEXT_PUBLIC_ADSENSE_SLOT_PUBLIC_COMBO`. Deben quedar vacíos hasta que la
+cuenta y cada unidad estén aprobadas. Solo se aceptan IDs numéricos y los slots
+son inertes si la configuración global de AdSense está deshabilitada.
 
 ## Comandos útiles
 ```bash
