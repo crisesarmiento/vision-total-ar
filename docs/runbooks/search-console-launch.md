@@ -35,8 +35,9 @@ Choose one of these verification paths:
   record after verification succeeds.
 - **URL-prefix property via HTML tag**: acceptable when verification should cover
   only the exact production URL prefix. Add the generated
-  `google-site-verification` meta tag to the homepage `<head>` through a private
-  production configuration path; do not commit the token value.
+  `google-site-verification` meta tag to the homepage `<head>` through
+  `GOOGLE_SITE_VERIFICATION` in private production configuration; do not commit
+  the token value.
 - **URL-prefix property via HTML file**: acceptable only if the generated file
   can be served from the site root without authentication or cross-domain
   redirects. Do not commit the generated token file to the public repository.
