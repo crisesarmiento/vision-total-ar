@@ -159,6 +159,9 @@ BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=
 NEXT_PUBLIC_APP_URL=
 NEXT_PUBLIC_ENABLE_WEB_ANALYTICS=false
+NEXT_PUBLIC_ADSENSE_ENABLED=false
+NEXT_PUBLIC_ADSENSE_CLIENT_ID=
+ADSENSE_DISABLED=true
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 YOUTUBE_API_KEY=
@@ -180,6 +183,13 @@ agregados de activación. El valor por defecto debe quedar en `false` para
 desarrollo local y entornos donde Analytics no esté habilitado en Vercel.
 `VERCEL_WEB_ANALYTICS_DISABLE_LOGS=true` puede usarse para silenciar logs de
 eventos server-side; no es un ID ni un secreto.
+
+`NEXT_PUBLIC_ADSENSE_ENABLED=true` habilita los hooks públicos de AdSense solo
+en `production` y solo si `NEXT_PUBLIC_ADSENSE_CLIENT_ID` contiene un ID válido
+con forma `ca-pub-...`. `ADSENSE_DISABLED=true` es el kill switch servidor y
+fuerza que no se emita el script ni `/ads.txt`, aunque las variables públicas
+estén configuradas. Documentá nombres y comportamiento, no IDs reales ni URLs
+privadas de cuenta.
 
 ## Comandos útiles
 ```bash
@@ -236,6 +246,12 @@ npm run prisma:studio
 - `lib/youtube.ts`: status y viewers en vivo con cache corto
 - `lib/rss.ts`: agregación del ticker
 - `docs/runbooks/rate-limiting.md`: límites repo-side para auth y polling, más nota operativa para Vercel WAF
+
+## Monetización
+- `docs/runbooks/adsense-readiness.md`: configuración pública segura para
+  AdSense, `/ads.txt`, kill switch y checklist manual de aprobación.
+- Los IDs reales de publisher, dashboards de cuenta y valores de producción son
+  privados y no deben commitearse.
 
 ## CI
 GitHub Actions ejecuta:

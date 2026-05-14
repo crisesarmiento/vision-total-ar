@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle, Eye, MonitorPlay, Share2 } from "lucide-react";
+import { AdSenseScript } from "@/components/adsense/adsense-script";
 import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { CopyLinkButton } from "@/components/combo/copy-link-button";
 import { FavoriteCombinationButton } from "@/components/combo/favorite-combination-button";
@@ -175,6 +176,7 @@ export default async function PublicCombinationPage({
 
   return (
     <>
+      {seoSummary.isIndexable ? <AdSenseScript /> : null}
       <JsonLdScript id="combo-json-ld" data={structuredData} />
       <TrackAnalyticsEvents
         events={[
