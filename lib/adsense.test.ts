@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  createAdSensePlacementConfig,
   createAdSenseConfig,
   getAdsTxtPublisherId,
   isValidAdSenseClientId,
+  isValidAdSenseSlotId,
 } from "./adsense";
 
 describe("AdSense config", () => {
@@ -85,5 +87,79 @@ describe("AdSense config", () => {
 
   it("converts ca-pub client IDs into ads.txt publisher IDs", () => {
     expect(getAdsTxtPublisherId(validClientId)).toBe("pub-1234567890123456");
+  });
+
+  it("validates numeric ad slot IDs", () => {
+    expect(isValidAdSenseSlotId("1234567890")).toBe(true);
+    expect(isValidAdSenseSlotId("")).toBe(false);
+    expect(isValidAdSenseSlotId("slot-demo")).toBe(false);
+    expect(isValidAdSenseSlotId("123 456")).toBe(false);
+  });
+
+  it("returns disabled placement config when global AdSense config is disabled", () => {
+    expect(
+      createAdSensePlacementConfig(
+        "channels-index",
+        {
+          NEXT_PUBLIC_ADSENSE_CLIENT_ID: validClientId,
+          NEXT_PUBLIC_ADSENSE_ENABLED: "false",
+          NEXT_PUBLIC_ADSENSE_SLOT_CHANNELS_INDEX: "1234567890",
+        },
+        "production",
+      ),
+    ).toEqual({
+      enabled: false,
+      clientId: null,
+      slotId: null,
+      surface: "channels-index",
+    });
+  });
+
+  it("ignores blank or invalid slot IDs", () => {
+    expect(
+      createAdSensePlacementConfig(
+        "channel-category",
+        {
+          NEXT_PUBLIC_ADSENSE_CLIENT_ID: validClientId,
+          NEXT_PUBLIC_ADSENSE_ENABLED: "true",
+          NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_CATEGORY: " ",
+        },
+        "production",
+      ).enabled,
+    ).toBe(false);
+
+    expect(
+      createAdSensePlacementConfig(
+        "channel-detail",
+        {
+          NEXT_PUBLIC_ADSENSE_CLIENT_ID: validClientId,
+          NEXT_PUBLIC_ADSENSE_ENABLED: "true",
+          NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_DETAIL: "slot-demo",
+        },
+        "production",
+      ).enabled,
+    ).toBe(false);
+  });
+
+  it("enables only the requested surface with a numeric slot ID", () => {
+    const env = {
+      NEXT_PUBLIC_ADSENSE_CLIENT_ID: validClientId,
+      NEXT_PUBLIC_ADSENSE_ENABLED: "true",
+      NEXT_PUBLIC_ADSENSE_SLOT_CHANNELS_INDEX: "1234567890",
+      NEXT_PUBLIC_ADSENSE_SLOT_CHANNEL_CATEGORY: "9876543210",
+    };
+
+    expect(createAdSensePlacementConfig("channels-index", env, "production")).toEqual({
+      enabled: true,
+      clientId: validClientId,
+      slotId: "1234567890",
+      surface: "channels-index",
+    });
+    expect(createAdSensePlacementConfig("public-combo", env, "production")).toEqual({
+      enabled: false,
+      clientId: null,
+      slotId: null,
+      surface: "public-combo",
+    });
   });
 });

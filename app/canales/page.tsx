@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Layers3, MonitorPlay, Radio } from "lucide-react";
+import { AdSensePlacement } from "@/components/adsense/adsense-placement";
 import { AdSenseScript } from "@/components/adsense/adsense-script";
 import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { PublicFooter } from "@/components/public-footer";
@@ -162,6 +163,8 @@ export default function ChannelsPage() {
           ))}
         </div>
         </section>
+
+        <AdSensePlacement surface="channels-index" />
 
         <section className="mt-10 grid gap-5">
         {categoryGroups.map(({ category, channels }) => (

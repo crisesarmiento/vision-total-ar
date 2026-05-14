@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Layers3, MonitorPlay, Radio } from "lucide-react";
+import { AdSensePlacement } from "@/components/adsense/adsense-placement";
 import { AdSenseScript } from "@/components/adsense/adsense-script";
 import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { JsonLdScript } from "@/components/seo/json-ld-script";
@@ -180,6 +181,8 @@ export default async function ChannelPage({ params }: ChannelPageParams) {
           </div>
         </aside>
         </section>
+
+        <AdSensePlacement surface="channel-detail" />
 
         <section className="mt-10">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">

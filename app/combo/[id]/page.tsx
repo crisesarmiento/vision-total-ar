@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle, Eye, MonitorPlay, Share2 } from "lucide-react";
+import { AdSensePlacement } from "@/components/adsense/adsense-placement";
 import { AdSenseScript } from "@/components/adsense/adsense-script";
 import { TrackAnalyticsEvents } from "@/components/analytics/track-analytics-events";
 import { CopyLinkButton } from "@/components/combo/copy-link-button";
@@ -377,6 +378,8 @@ export default async function PublicCombinationPage({
           )}
         </CardContent>
         </Card>
+
+        {seoSummary.isIndexable ? <AdSensePlacement surface="public-combo" /> : null}
       </main>
       <PublicFooter />
     </>
