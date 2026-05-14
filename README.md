@@ -159,6 +159,7 @@ BETTER_AUTH_SECRET=
 BETTER_AUTH_URL=
 NEXT_PUBLIC_APP_URL=
 NEXT_PUBLIC_ENABLE_WEB_ANALYTICS=false
+GOOGLE_SITE_VERIFICATION=
 NEXT_PUBLIC_ADSENSE_ENABLED=false
 NEXT_PUBLIC_ADSENSE_CLIENT_ID=
 NEXT_PUBLIC_ADSENSE_SLOT_CHANNELS_INDEX=
@@ -187,6 +188,11 @@ agregados de activación. El valor por defecto debe quedar en `false` para
 desarrollo local y entornos donde Analytics no esté habilitado en Vercel.
 `VERCEL_WEB_ANALYTICS_DISABLE_LOGS=true` puede usarse para silenciar logs de
 eventos server-side; no es un ID ni un secreto.
+
+`GOOGLE_SITE_VERIFICATION` permite emitir la meta etiqueta
+`google-site-verification` para verificar una propiedad URL-prefix en Google
+Search Console. Guardá el token real solo en la configuración privada del
+proveedor de producción; no lo commits en archivos públicos.
 
 `NEXT_PUBLIC_ADSENSE_ENABLED=true` habilita los hooks públicos de AdSense solo
 en `production` y solo si `NEXT_PUBLIC_ADSENSE_CLIENT_ID` contiene un ID válido
