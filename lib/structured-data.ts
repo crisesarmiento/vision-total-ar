@@ -1,4 +1,6 @@
 import type { NewsChannel } from "@/lib/channels";
+import type { EvergreenGuide } from "@/lib/evergreen-guides";
+import { getEvergreenGuideRoute } from "@/lib/evergreen-guides";
 import type { PublicChannelCategory } from "@/lib/public-channel-pages";
 import {
   getPublicCategoryRoute,
@@ -144,6 +146,27 @@ export function buildChannelItemListStructuredData(
         name: channel.name,
         url: getCanonicalUrl(getPublicChannelRoute(channel)),
         description: channel.description,
+      },
+    })),
+  };
+}
+
+export function buildEvergreenGuideItemListStructuredData(
+  guides: EvergreenGuide[],
+): JsonLdObject {
+  return {
+    "@context": SCHEMA_CONTEXT,
+    "@type": "ItemList",
+    name: "Guías de monitoreo de noticias argentinas en Vision AR",
+    numberOfItems: guides.length,
+    itemListElement: guides.map((guide, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "WebPage",
+        name: guide.title,
+        url: getCanonicalUrl(getEvergreenGuideRoute(guide)),
+        description: guide.description,
       },
     })),
   };

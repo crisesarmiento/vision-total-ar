@@ -23,13 +23,23 @@ export function PublicFooter({ className }: PublicFooterProps) {
             marcas y contenidos pertenecen a sus respectivos proveedores.
           </p>
         </div>
-        <nav aria-label="Páginas públicas de confianza" className="flex flex-wrap gap-3 md:justify-end">
-          {PUBLIC_POLICY_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-white">
-              {link.label}
+        <div className="grid gap-4 md:text-right">
+          <nav aria-label="Descubrimiento público" className="flex flex-wrap gap-3 md:justify-end">
+            <Link href="/canales" className="hover:text-white">
+              Canales
             </Link>
-          ))}
-        </nav>
+            <Link href="/guias" className="hover:text-white">
+              Guías
+            </Link>
+          </nav>
+          <nav aria-label="Páginas públicas de confianza" className="flex flex-wrap gap-3 md:justify-end">
+            {PUBLIC_POLICY_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className="hover:text-white">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </div>
       <div className="mt-6 flex flex-wrap gap-3 text-xs text-white/45">
         <a

@@ -60,6 +60,19 @@ describe("analytics privacy helpers", () => {
         source: "private_dashboard",
       }),
     ).toBeNull();
+    expect(sanitizeAnalyticsEvent("search_landing_view", { surface: "guides" })).toEqual({
+      name: "search_landing_view",
+      properties: {
+        surface: "guides",
+      },
+    });
+    expect(sanitizeAnalyticsEvent("search_landing_view", { surface: "guide" })).toEqual({
+      name: "search_landing_view",
+      properties: {
+        surface: "guide",
+      },
+    });
+    expect(sanitizeAnalyticsEvent("search_landing_view", { surface: "private" })).toBeNull();
     expect(sanitizeAnalyticsEvent("search_text_entered", { query: "tn" })).toBeNull();
   });
 

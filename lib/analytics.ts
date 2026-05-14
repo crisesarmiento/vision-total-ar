@@ -9,7 +9,13 @@ export const PROTECTED_ANALYTICS_ROUTE_PREFIXES = [
   "/mis-combinaciones",
 ] as const;
 
-export type SearchLandingSurface = "channels" | "category" | "channel" | "public_combo";
+export type SearchLandingSurface =
+  | "channels"
+  | "category"
+  | "channel"
+  | "guides"
+  | "guide"
+  | "public_combo";
 export type DashboardOpenSource = "direct" | "public_combo" | "shared_layout";
 export type SignupMethod = "email" | "magic_link" | "google" | "unknown";
 export type CountBucket = "0" | "1-2" | "3-4" | "5+";
@@ -96,6 +102,8 @@ export function sanitizeAnalyticsEvent(
           "channels",
           "category",
           "channel",
+          "guides",
+          "guide",
           "public_combo",
         ] as const)
       ) {

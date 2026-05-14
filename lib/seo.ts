@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getEvergreenGuideSitemapPaths } from "@/lib/evergreen-guides";
 import { getPublicChannelSitemapPaths } from "@/lib/public-channel-pages";
 import { PUBLIC_POLICY_PATHS } from "@/lib/public-policy-pages";
 
@@ -7,6 +8,7 @@ const DEFAULT_APP_URL = "http://localhost:3000";
 export const SITEMAP_PATHS = [
   "/",
   ...getPublicChannelSitemapPaths(),
+  ...getEvergreenGuideSitemapPaths(),
   ...PUBLIC_POLICY_PATHS,
 ];
 

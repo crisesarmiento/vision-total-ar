@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { channels } from "@/lib/channels";
+import { getEvergreenGuides } from "@/lib/evergreen-guides";
 import { getPublicCategories } from "@/lib/public-channel-pages";
 import { analyzePublicCombinationSeo } from "@/lib/public-combination-seo";
 import {
   buildBreadcrumbStructuredData,
   buildCategoryItemListStructuredData,
   buildChannelItemListStructuredData,
+  buildEvergreenGuideItemListStructuredData,
   buildPublicCombinationChannelItemListStructuredData,
   buildSiteIdentityStructuredData,
   serializeStructuredData,
@@ -103,6 +105,32 @@ describe("structured data builders", () => {
       }),
     });
     expect(collectTypes(serialized)).not.toContain("VideoObject");
+  });
+
+  it("builds evergreen guide item lists as WebPage entries", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://vision.example";
+    const [guide] = getEvergreenGuides();
+
+    const data = buildEvergreenGuideItemListStructuredData([guide]);
+
+    expect(data).toMatchObject({
+      "@type": "ItemList",
+      name: "Guías de monitoreo de noticias argentinas en Vision AR",
+      numberOfItems: 1,
+    });
+    expect(data.itemListElement).toEqual([
+      {
+        "@type": "ListItem",
+        position: 1,
+        item: {
+          "@type": "WebPage",
+          name: guide.title,
+          url: "https://vision.example/guias/seguir-ultimo-momento-argentina",
+          description: guide.description,
+        },
+      },
+    ]);
+    expect(collectTypes(data)).not.toContain("VideoObject");
   });
 
   it("builds public combination item lists from catalog-backed channels only", () => {
