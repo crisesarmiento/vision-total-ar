@@ -16,7 +16,7 @@ describe("SEO URL helpers", () => {
     delete process.env.NEXT_PUBLIC_APP_URL;
 
     expect(getSiteUrl()).toBe("http://localhost:3000");
-    expect(getCanonicalUrl("/")).toBe("http://localhost:3000/");
+    expect(getCanonicalUrl("/")).toBe("http://localhost:3000");
   });
 
   it("normalizes configured app URLs with trailing slashes", () => {
@@ -36,7 +36,7 @@ describe("SEO URL helpers", () => {
 
     expect(urls).toEqual(
       expect.arrayContaining([
-        "https://vision.example/",
+        "https://vision.example",
         "https://vision.example/canales",
         "https://vision.example/canales/tn",
         "https://vision.example/canales/categoria/noticias",
@@ -67,6 +67,15 @@ describe("SEO URL helpers", () => {
     );
   });
 
+  it("emits the same homepage URL in canonical helpers and sitemap entries", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://vision.example/";
+
+    expect(getCanonicalUrl("/")).toBe("https://vision.example");
+    expect(getSitemapEntries(new Date("2026-05-13T00:00:00.000Z"))[0]?.url).toBe(
+      "https://vision.example",
+    );
+  });
+
   it("does not generate duplicate sitemap URLs", () => {
     process.env.NEXT_PUBLIC_APP_URL = "https://vision.example";
     const urls = getSitemapEntries(new Date("2026-05-13T00:00:00.000Z")).map(
@@ -84,7 +93,7 @@ describe("SEO URL helpers", () => {
     ]).map((entry) => entry.url);
 
     expect(urls).toEqual([
-      "https://vision.example/",
+      "https://vision.example",
       "https://vision.example/combo/mesa-de-noticias",
     ]);
   });
