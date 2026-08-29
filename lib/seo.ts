@@ -22,6 +22,12 @@ export function getSiteUrl() {
 export function getCanonicalUrl(path = "/") {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 
+  // Keep the homepage URL without a trailing slash so sitemap, JSON-LD, and the
+  // App Router canonical tag all match. Next.js serializes `/` that way.
+  if (normalizedPath === "/") {
+    return getSiteUrl();
+  }
+
   return new URL(normalizedPath, `${getSiteUrl()}/`).toString();
 }
 

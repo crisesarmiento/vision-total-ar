@@ -51,7 +51,7 @@ describe("structured data builders", () => {
     expect(data.map((item) => item["@type"])).toEqual(["Organization", "WebSite"]);
     expect(data[0]).toMatchObject({
       name: "Vision AR",
-      url: "https://vision.example/",
+      url: "https://vision.example",
       logo: "https://vision.example/icon",
     });
     expect(JSON.parse(serializeStructuredData(data))).toEqual(data);
@@ -69,7 +69,7 @@ describe("structured data builders", () => {
     expect(data).toMatchObject({
       "@type": "BreadcrumbList",
       itemListElement: [
-        { position: 1, name: "Inicio", item: "https://vision.example/" },
+        { position: 1, name: "Inicio", item: "https://vision.example" },
         { position: 2, name: "Canales", item: "https://vision.example/canales" },
         {
           position: 3,
