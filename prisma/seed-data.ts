@@ -96,7 +96,8 @@ export const seedCombinations: SeedCombination[] = [
     ownerEmail: "demo@visionar.local",
     publicSlug: "demo-mesa-de-noticias",
     name: "Mesa de noticias",
-    description: "Cuatro senales nacionales para comparar agenda en vivo.",
+    description:
+      "Compará TN, C5N, LN+ y A24 en una grilla 2x2 para seguir la agenda nacional, móviles y tiempos de reacción de las noticias argentinas en vivo.",
     visibility: "PUBLIC",
     layoutJson: layout("2x2", ["tn", "c5n", "lnmas", "a24"]),
   },
@@ -105,7 +106,8 @@ export const seedCombinations: SeedCombination[] = [
     ownerEmail: "demo@visionar.local",
     publicSlug: "demo-modo-elecciones",
     name: "Modo Elecciones",
-    description: "Seis canales principales para cobertura electoral.",
+    description:
+      "Armá una mesa electoral con seis señales argentinas para comparar placas, entrevistas, resultados y tiempos de reacción durante jornadas de votación.",
     visibility: "PUBLIC",
     layoutJson: layout("elecciones", [
       "tn",
@@ -121,7 +123,8 @@ export const seedCombinations: SeedCombination[] = [
     ownerEmail: "demo@visionar.local",
     publicSlug: "demo-streaming-independiente",
     name: "Streaming independiente",
-    description: "Canales digitales argentinos en paralelo.",
+    description:
+      "Seguí Luzu, Olga, Bondi y Blender juntos para comparar conversación digital, agenda social y cobertura independiente argentina en vivo.",
     visibility: "PUBLIC",
     layoutJson: layout("2x2", ["luzu", "olga", "bondi", "blender"]),
   },
