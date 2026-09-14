@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { channels } from "../lib/channels";
 import { dashboardLayoutSchema } from "../lib/dashboard-layout";
 import { GRID_PRESETS } from "../lib/layout-presets";
+import { analyzePublicCombinationSeo } from "../lib/public-combination-seo";
 import {
   expectedSeedFavoriteCounts,
   seedChannelAnalytics,
@@ -55,6 +56,18 @@ describe("local seed data", () => {
       "demo-modo-elecciones": 2,
       "demo-streaming-independiente": 1,
     });
+  });
+
+  it("makes public seed combinations eligible for sitemap indexing", () => {
+    const publicCombinations = seedCombinations.filter(
+      (combination) => combination.visibility === "PUBLIC",
+    );
+
+    expect(publicCombinations.length).toBeGreaterThan(0);
+
+    for (const combination of publicCombinations) {
+      expect(analyzePublicCombinationSeo(combination).isIndexable).toBe(true);
+    }
   });
 
   it("references only seeded public combinations from engagement rows", () => {
